@@ -17,3 +17,28 @@ Title: <one line>
 Summary: <the summary>
 Key Points: <3-5 bullets>
 """
+
+def st_brief_prompt(text: str) -> str:
+    return f"""You are a research brief assistant.
+Read the text below and fill in every section.
+
+RULES:
+- Use ONLY facts present in the text. Do not add outside knowledge.
+- Preserve all numbers, units, dates exactly as written.
+- If a section has no info in the text, write "Not stated in source."
+
+TEXT:
+\"\"\"
+{text}
+\"\"\"
+
+OUTPUT FORMAT:
+Title:
+Objective:
+Method:
+Key Findings:
+Important Values/Dates:
+Limitations:
+Implications:
+Keywords:
+"""
