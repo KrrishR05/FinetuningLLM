@@ -27,9 +27,9 @@ class ModelAdapter:
             self.models = [
                 {
                     "id": "main",
-                    "label": "💎 Gemma 4 E2B (Google DeepMind) — Main Source",
+                    "label": "Gemma 4 E2B (Google DeepMind) - Main Source",
                     "runtime": "local_llm",
-                    "model_name": "gemma-4-E2B-it",
+                    "model_name": "gemma4-e2b:latest",
                     "gguf_filename": "gemma-4-E2B-it-Q4_0.gguf",
                     "endpoint": "http://127.0.0.1:11434",
                     "llama_server_endpoint": "http://127.0.0.1:8080",
@@ -72,9 +72,9 @@ class ModelAdapter:
 
         return {
             "id": "main",
-            "label": "💎 Gemma 4 E2B (Google DeepMind) — Main Source",
+            "label": "Gemma 4 E2B (Google DeepMind) - Main Source",
             "runtime": "local_llm",
-            "model_name": "gemma-4-E2B-it",
+            "model_name": "gemma4-e2b:latest",
             "gguf_filename": "gemma-4-E2B-it-Q4_0.gguf",
             "endpoint": "http://127.0.0.1:11434",
             "llama_server_endpoint": "http://127.0.0.1:8080",
@@ -89,7 +89,7 @@ class ModelAdapter:
         ollama_endpoint = config.get("endpoint", "http://127.0.0.1:11434").rstrip("/")
         llama_endpoint = config.get("llama_server_endpoint", "http://127.0.0.1:8080").rstrip("/")
 
-        # 1. Check llama-server endpoint (http://127.0.0.1:8080/health or /props)
+        # Check llama-server endpoint
         try:
             res_llama = requests.get(f"{llama_endpoint}/health", timeout=2)
             if res_llama.status_code == 200 or res_llama.status_code == 503:
@@ -104,7 +104,7 @@ class ModelAdapter:
         except requests.exceptions.RequestException:
             pass
 
-        # Also check /props for older llama.cpp server
+        # Check /props for older llama.cpp server
         try:
             res_llama2 = requests.get(f"{llama_endpoint}/props", timeout=2)
             if res_llama2.status_code == 200:
@@ -117,12 +117,12 @@ class ModelAdapter:
         except requests.exceptions.RequestException:
             pass
 
-        # 2. Check Ollama endpoint (http://127.0.0.1:11434/api/tags)
+        # Check Ollama endpoint
         try:
             res = requests.get(f"{ollama_endpoint}/api/tags", timeout=2)
             if res.status_code == 200:
                 installed_models = [m.get("name") for m in res.json().get("models", [])]
-                target_model = config.get("model_name", "gemma-4-E2B-it")
+                target_model = config.get("model_name", "gemma4-e2b:latest")
                 is_available = any(target_model in m for m in installed_models) or len(installed_models) > 0
                 return {
                     "status": "online",
@@ -154,17 +154,17 @@ class ModelAdapter:
         timeout: int = 120,
     ) -> Dict[str, Any]:
         """
-        Sends a prompt to the local Gemma-4 LLM and returns a standardized response dict.
-        Automatically routes to active runtime (llama-server or Ollama).
+        Sends a prompt to the local LLM and returns a standardized response dict.
+        Tries llama-server (chat API, then raw completion) first, then Ollama.
         """
         config = self.get_model_config(model_id)
         ollama_endpoint = config.get("endpoint", "http://127.0.0.1:11434").rstrip("/")
         llama_endpoint = config.get("llama_server_endpoint", "http://127.0.0.1:8080").rstrip("/")
-        model_name = config.get("model_name", "gemma-4-E2B-it")
+        model_name = config.get("model_name", "gemma4-e2b:latest")
 
         start_time = time.time()
 
-        # Try llama.cpp server OpenAI-compatible chat endpoint first (http://127.0.0.1:8080/v1/chat/completions)
+        # Try llama.cpp server OpenAI-compatible chat endpoint first
         try:
             chat_url = f"{llama_endpoint}/v1/chat/completions"
             messages = []
@@ -196,7 +196,7 @@ class ModelAdapter:
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             pass
 
-        # Try llama.cpp server raw completion endpoint (http://127.0.0.1:8080/completion)
+        # Try llama.cpp server raw completion endpoint
         try:
             llama_url = f"{llama_endpoint}/completion"
             full_prompt = prompt
@@ -281,4 +281,3 @@ if __name__ == "__main__":
     print("\nChecking Local LLM Health...")
     health = adapter.check_health()
     print("Health Status:", health)
-
