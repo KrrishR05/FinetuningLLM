@@ -1,23 +1,23 @@
-﻿{
+{
   "models": [
     {
+      "id": "main",
+      "label": "💎 Gemma 4 E2B (Google DeepMind) — Main Source",
+      "runtime": "ollama",
+      "model_name": "google/gemma-4-E2B-it",
+      "endpoint": "http://127.0.0.1:11434",
+      "status": "tested",
+      "default": true,
+      "notes": "Main source model profile. Google DeepMind Gemma 4 instruction-tuned."
+    },
+    {
       "id": "balanced",
-      "label": "⚖️ Balanced — Qwen 2.5 7B (Default)",
+      "label": "⚖️ Balanced — Qwen 2.5 7B",
       "runtime": "ollama",
       "model_name": "qwen2.5:7b",
       "endpoint": "http://127.0.0.1:11434",
       "status": "tested",
-      "default": true,
       "notes": "Best quality-speed balance. Fits entirely in RTX 4060 VRAM."
-    },
-    {
-      "id": "fast",
-      "label": "⚡ Fast — Qwen 2.5 3B",
-      "runtime": "ollama",
-      "model_name": "qwen2.5:3b",
-      "endpoint": "http://127.0.0.1:11434",
-      "status": "tested",
-      "notes": "CPU-friendly, fastest response. Shows low-resource flexibility."
     },
     {
       "id": "llama",

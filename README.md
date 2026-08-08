@@ -29,8 +29,8 @@
 
 ### 5. 🎛️ Config-Driven Multi-Model Registry
 - Seamlessly switch between **5 local models across 4 families**:
-  - `Qwen 2.5 7B` (Alibaba) — *Default (GPU-accelerated)*
-  - `Qwen 2.5 3B` (Alibaba) — *Fast / CPU-friendly profile*
+  - `Gemma 4 E2B` (`google/gemma-4-E2B-it`) (Google DeepMind) — *Main Source Model (Default)*
+  - `Qwen 2.5 7B` (Alibaba) — *Balanced profile*
   - `Llama 3.2 3B` (Meta) — *Cross-vendor model profile*
   - `Gemma 3 4B` (Google) — *High instruction-following capability*
   - `Phi-4 Mini 3.8B` (Microsoft) — *Reasoning profile*
@@ -64,11 +64,11 @@
 
 3. **Pull Tested Local Models via Ollama:**
    ```bash
-   # Pull default high-quality demo model
-   ollama pull qwen2.5:7b
+   # Pull main source demo model (Gemma 4 E2B)
+   ollama pull google/gemma-4-E2B-it
 
    # Pull remaining multi-vendor profiles (optional but recommended for judging)
-   ollama pull qwen2.5:3b
+   ollama pull qwen2.5:7b
    ollama pull llama3.2:3b
    ollama pull gemma3:4b
    ollama pull phi4-mini:3.8b
