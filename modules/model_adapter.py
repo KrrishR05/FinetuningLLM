@@ -27,9 +27,9 @@ class ModelAdapter:
             self.models = [
                 {
                     "id": "main",
-                    "label": "💎 Gemma 4 E2B (Google DeepMind) — Main Source",
+                    "label": "Gemma 4 E2B (Google DeepMind) - Main Source",
                     "runtime": "local_llm",
-                    "model_name": "gemma-4-E2B-it",
+                    "model_name": "gemma4-e2b:latest",
                     "gguf_filename": "gemma-4-E2B-it-Q4_0.gguf",
                     "endpoint": "http://127.0.0.1:11434",
                     "llama_server_endpoint": "http://127.0.0.1:8080",
@@ -72,9 +72,9 @@ class ModelAdapter:
 
         return {
             "id": "main",
-            "label": "💎 Gemma 4 E2B (Google DeepMind) — Main Source",
+            "label": "Gemma 4 E2B (Google DeepMind) - Main Source",
             "runtime": "local_llm",
-            "model_name": "gemma-4-E2B-it",
+            "model_name": "gemma4-e2b:latest",
             "gguf_filename": "gemma-4-E2B-it-Q4_0.gguf",
             "endpoint": "http://127.0.0.1:11434",
             "llama_server_endpoint": "http://127.0.0.1:8080",

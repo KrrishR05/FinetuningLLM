@@ -1,1 +1,1 @@
-FROM ./gemma-4-E2B-it-Q4_0.gguf
+FROM "C:/Users/HeetP/Downloads/gemma-4-E2B-it-Q4_0.gguf"

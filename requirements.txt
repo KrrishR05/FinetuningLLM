@@ -1,4 +1,6 @@
-﻿streamlit
+streamlit
 pymupdf
 python-docx
 requests
+python-pptx
+openpyxl

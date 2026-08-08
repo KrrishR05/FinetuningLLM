@@ -16,3 +16,10 @@ env/
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Test files
+test_extractor.py
+test_llm_integration.py
+
+# Extra files
+sprint_run.md
