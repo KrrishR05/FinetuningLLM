@@ -164,7 +164,39 @@ class ModelAdapter:
 
         start_time = time.time()
 
-        # Try llama.cpp server completion endpoint first (http://127.0.0.1:8080/completion)
+        # Try llama.cpp server OpenAI-compatible chat endpoint first (http://127.0.0.1:8080/v1/chat/completions)
+        try:
+            chat_url = f"{llama_endpoint}/v1/chat/completions"
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
+            payload = {
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens if max_tokens else 1024,
+                "stream": False,
+            }
+            res = requests.post(chat_url, json=payload, timeout=timeout)
+            latency = round(time.time() - start_time, 2)
+            if res.status_code == 200:
+                data = res.json()
+                text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                if text:
+                    return {
+                        "status": "success",
+                        "runtime": "llama-server (chat API)",
+                        "text": text,
+                        "model_id": config.get("id"),
+                        "model_name": "Gemma-4 E2B",
+                        "latency_seconds": latency,
+                        "raw": data,
+                    }
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            pass
+
+        # Try llama.cpp server raw completion endpoint (http://127.0.0.1:8080/completion)
         try:
             llama_url = f"{llama_endpoint}/completion"
             full_prompt = prompt
@@ -182,15 +214,16 @@ class ModelAdapter:
             if res.status_code == 200:
                 data = res.json()
                 content = data.get("content", "").strip()
-                return {
-                    "status": "success",
-                    "runtime": "llama-server",
-                    "text": content,
-                    "model_id": config.get("id"),
-                    "model_name": "Gemma-4 E2B",
-                    "latency_seconds": latency,
-                    "raw": data,
-                }
+                if content:
+                    return {
+                        "status": "success",
+                        "runtime": "llama-server",
+                        "text": content,
+                        "model_id": config.get("id"),
+                        "model_name": "Gemma-4 E2B",
+                        "latency_seconds": latency,
+                        "raw": data,
+                    }
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             pass
 
