@@ -70,3 +70,30 @@ Opinions/Editorial Angles:
 - <opinion 2>
 Overall Summary: <2-3 sentences>
 """
+
+def grammar_rewrite_prompt(text: str, preset: str = "formal") -> str:
+    return f"""You are a grammar and clarity assistant.
+Your job is to fix grammar and improve phrasing WITHOUT changing any facts.
+
+STEP 1 — Before rewriting, list every factual value in the text that must 
+NOT change: numbers, dates, names, units, proper nouns.
+
+STEP 2 — Rewrite the text in a {preset} tone, fixing grammar, punctuation, 
+and awkward phrasing. Do not add, remove, or alter any fact from Step 1.
+
+RULES:
+- Do not add new information or opinions.
+- Do not remove any factual content.
+- If a sentence is ambiguous, keep the ambiguity rather than guessing intent.
+
+TEXT:
+\"\"\"
+{text}
+\"\"\"
+
+OUTPUT FORMAT:
+Locked Facts: <comma-separated list from Step 1>
+Original: <the input text, unchanged>
+Rewritten: <the improved version>
+Changes Made: <bullet list of what was fixed and why, e.g. "fixed subject-verb agreement in sentence 2">
+"""
