@@ -1,0 +1,31 @@
+{
+  "project_name": "Netravaani — Offline Document Intelligence Suite",
+  "version": "1.0.0",
+  "mode": "100% Offline & Air-Gapped",
+  "primary_model": {
+    "name": "Google Gemma 4 E2B Instruction-Tuned",
+    "filename": "gemma-4-E2B-it-Q4_0.gguf",
+    "architecture": "Gemma",
+    "quantization": "Q4_0",
+    "parameters": "2B/4B Efficient Edge",
+    "license": "Gemma Terms of Use (Open Weights)",
+    "developer": "Google DeepMind"
+  },
+  "runtime_options": {
+    "llama_server": {
+      "port": 8080,
+      "backend": "CUDA 12.4 cuBLAS / CPU fallback",
+      "binary": "llama-server.exe"
+    },
+    "ollama": {
+      "port": 11434,
+      "endpoint": "/api/generate"
+    }
+  },
+  "features": [
+    "Quick Summarization (50-word, 100-word, Executive)",
+    "Science & Technology Research Briefs (Map-Reduce page-aware extraction)",
+    "News & Editorial Digest (Strict Fact vs. Opinion isolation)",
+    "Rewrite & Grammar (Context-safe with Fact-Lock integrity)"
+  ]
+}
