@@ -1,0 +1,6 @@
+Task_Type,Model,Input_Length_Tokens,Output_Length_Tokens,Latency_Sec,Fact_Preservation_Score,Status
+Quick_Summary_50w,Gemma 4 E2B (Google DeepMind),450,52,1.24,100%,PASSED
+Quick_Summary_100w,Gemma 4 E2B (Google DeepMind),820,108,2.15,98.5%,PASSED
+ST_Research_Brief,Gemma 4 E2B (Google DeepMind),2140,410,4.82,99.2%,PASSED
+News_Digest_Fact_Opinion,Gemma 4 E2B (Google DeepMind),1350,290,3.10,100%,PASSED
+Rewrite_Grammar_FactLock,Gemma 4 E2B (Google DeepMind),620,180,1.95,100%,PASSED

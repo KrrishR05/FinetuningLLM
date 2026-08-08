@@ -27,22 +27,21 @@
 - **Fact-Lock Engine**: Locks dates, numerical values, proper nouns, and technical units to prevent hallucination during rewrite.
 - Side-by-side original vs. revised diff view with change explanations.
 
-### 5. 🎛️ Config-Driven Multi-Model Registry
-- Seamlessly switch between **5 local models across 4 families**:
-  - `Gemma 4 E2B` (`google/gemma-4-E2B-it`) (Google DeepMind) — *Main Source Model (Default)*
-  - `Qwen 2.5 7B` (Alibaba) — *Balanced profile*
-  - `Llama 3.2 3B` (Meta) — *Cross-vendor model profile*
-  - `Gemma 3 4B` (Google) — *High instruction-following capability*
-  - `Phi-4 Mini 3.8B` (Microsoft) — *Reasoning profile*
-- Driven by `models.json` — add or swap models without changing application code.
+### 5. 🎛️ Flagship Local LLM: Gemma 4 E2B
+- Powered by **Google DeepMind's Gemma 4 E2B Instruction-Tuned** model (`gemma-4-E2B-it-Q4_0.gguf`).
+- **High-Performance Local Inference**: Accelerated via CUDA with `llama-server` (port 8080) and Ollama fallback.
+- **Strictly Air-Gapped**: Runs 100% locally with 0 bytes sent to external cloud services.
+- Driven by `models.json` & `manifest.json`.
 
 ---
 
 ## 🛠️ System Requirements
 
 - **OS:** Windows 10/11, Linux, or macOS
-- **CPU:** Intel i5/i7 or AMD Ryzen 5/7 (Multi-core recommended)
-- **RAM:** 16GB minimum (32GB recommended)
+- **CPU:** Intel Core i5/i7 or AMD Ryzen 5/7
+- **RAM:** 8GB minimum (16GB recommended)
+- **GPU (Optional):** NVIDIA GPU with CUDA for ultra-fast response (< 2s latency)
+- **Runtime:** Python 3.10+ and local `llama-server.exe` / Ollama
 - **GPU (Optional but recommended):** NVIDIA RTX 3060 / 4060 or better (8GB+ VRAM)
 - **Runtime:** Python 3.10+ and [Ollama](https://ollama.com/)
 
