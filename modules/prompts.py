@@ -1,11 +1,26 @@
 def quick_summary_prompt(text: str, length: str = "100 words", fmt: str = "bullets") -> str:
+    if fmt == "bullets":
+        format_instruction = "Use bullet points."
+    else:
+        format_instruction = "Write as a single continuous paragraph. Do NOT include bullet points or lists."
+
+    if fmt == "bullets":
+        output_block = """Title: <one line>
+Summary: <the summary>
+Key Points: <3-5 bullets>"""
+    else:
+        output_block = """Title: <one line>
+Summary: <the summary>"""
+
     return f"""You are a precise summarization assistant.
-Summarize the following text in {length}, formatted as {fmt}.
+Summarize the following text in {length}. Do NOT exceed {length}.
+{format_instruction}
 
 RULES:
 - Use ONLY facts present in the text below. Do not add outside knowledge.
 - Preserve all numbers, dates, and names exactly as written.
 - If the text is unclear or too short to summarize meaningfully, say so instead of inventing content.
+- Keep your total response under 400 words.
 
 TEXT:
 \"\"\"
@@ -13,9 +28,7 @@ TEXT:
 \"\"\"
 
 OUTPUT FORMAT:
-Title: <one line>
-Summary: <the summary>
-Key Points: <3-5 bullets>
+{output_block}
 """
 
 def st_brief_prompt(text: str) -> str:
@@ -26,6 +39,7 @@ RULES:
 - Use ONLY facts present in the text. Do not add outside knowledge.
 - Preserve all numbers, units, dates exactly as written.
 - If a section has no info in the text, write "Not stated in source."
+- Keep your total response under 400 words.
 
 TEXT:
 \"\"\"
@@ -34,6 +48,8 @@ TEXT:
 
 OUTPUT FORMAT:
 Title:
+Authors:
+Source/Published:
 Objective:
 Method:
 Key Findings:
@@ -44,6 +60,11 @@ Keywords:
 """
 
 def news_digest_prompt(text: str, topic: str = "") -> str:
+    if topic:
+        topic_instruction = f"IMPORTANT: ONLY include items directly about {topic}. Completely discard all unrelated content."
+    else:
+        topic_instruction = "No topic filter given — cover all topics present in the text."
+
     return f"""You are a news analysis assistant.
 Read the headlines/articles below and produce a topic-wise overview.
 
@@ -53,7 +74,9 @@ RULES:
 - FACT = verifiable claim (dates, numbers, events, statements attributed to a named source).
 - OPINION = editorial judgment, speculation, or unattributed claim.
 - Preserve all numbers, dates, and names exactly as written.
-- If a topic filter is given ({topic if topic else "none"}), only include items relevant to it.
+- {topic_instruction}
+- Output exactly ONE set of Topic/Facts/Opinions/Summary. Do not create multiple Topic sections.
+- Keep your total response under 400 words.
 
 TEXT:
 \"\"\"
@@ -85,6 +108,7 @@ RULES:
 - Do not add new information or opinions.
 - Do not remove any factual content.
 - If a sentence is ambiguous, keep the ambiguity rather than guessing intent.
+- Keep your total response under 400 words.
 
 TEXT:
 \"\"\"
@@ -93,7 +117,6 @@ TEXT:
 
 OUTPUT FORMAT:
 Locked Facts: <comma-separated list from Step 1>
-Original: <the input text, unchanged>
 Rewritten: <the improved version>
 Changes Made: <bullet list of what was fixed and why, e.g. "fixed subject-verb agreement in sentence 2">
 """
