@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Microscope, Newspaper, PenLine } from 'lucide-react'
-import CommandBar from './components/CommandBar'
-import NavRail from './components/NavRail'
+import VercelHeader from './components/VercelHeader'
+import VercelMetrics from './components/VercelMetrics'
 import Summarizer from './pages/Summarizer'
 import ScienceBrief from './pages/ScienceBrief'
 import NewsDigest from './pages/NewsDigest'
 import Rewriter from './pages/Rewriter'
 
 const TABS = [
-  { id: 'summarizer', label: 'AI/ML Summarizer', icon: Zap },
+  { id: 'summarizer', label: 'Overview / Summarizer', icon: Zap },
   { id: 'science', label: 'S&T Research Brief', icon: Microscope },
   { id: 'news', label: 'News & Fact Digest', icon: Newspaper },
-  { id: 'rewriter', label: 'Rewrite & Fact-Lock', icon: PenLine },
+  { id: 'rewriter', label: 'Fact-Lock Rewriter', icon: PenLine },
 ]
 
 export default function App() {
@@ -64,12 +64,12 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-app)] relative">
-      {/* Ambient background mesh glow */}
-      <div className="ambient-mesh" />
-
-      {/* Top Command & Telemetry Bar */}
-      <CommandBar
+    <div className="min-h-screen bg-[var(--bg-page)] text-white flex flex-col font-sans">
+      {/* Vercel Header with Sub-Tabs */}
+      <VercelHeader
+        tabs={TABS}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
         models={models}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
@@ -79,38 +79,35 @@ export default function App() {
         onUnloadVRAM={handleUnloadVRAM}
       />
 
-      {/* Main Studio Area */}
-      <div className="flex-1 flex overflow-hidden z-10">
-        {/* Left Navigation Rail */}
-        <NavRail tabs={TABS} activeTab={activeTab} onSelectTab={setActiveTab} />
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8">
+        {/* Vercel Deployment Metrics */}
+        <VercelMetrics health={health} selectedModel={selectedModel} />
 
-        {/* Studio Workspace Content */}
-        <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-7xl mx-auto"
-            >
-              {activeTab === 'summarizer' && (
-                <Summarizer settings={settings} selectedModel={selectedModel} />
-              )}
-              {activeTab === 'science' && (
-                <ScienceBrief settings={settings} selectedModel={selectedModel} />
-              )}
-              {activeTab === 'news' && (
-                <NewsDigest settings={settings} selectedModel={selectedModel} />
-              )}
-              {activeTab === 'rewriter' && (
-                <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
+        {/* Tab Page Transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
+            {activeTab === 'summarizer' && (
+              <Summarizer settings={settings} selectedModel={selectedModel} />
+            )}
+            {activeTab === 'science' && (
+              <ScienceBrief settings={settings} selectedModel={selectedModel} />
+            )}
+            {activeTab === 'news' && (
+              <NewsDigest settings={settings} selectedModel={selectedModel} />
+            )}
+            {activeTab === 'rewriter' && (
+              <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </main>
     </div>
   )
 }

@@ -1,98 +1,103 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ============================================
-   NETRAVAANI ENTERPRISE WORKBENCH — Design System
+   NETRAVAANI — Vercel Design System
    ============================================ */
 
 :root {
-  /* High-Contrast Enterprise Dark Palette (Zinc/Slate) */
-  --bg-app: #09090b;          /* zinc-950 */
-  --bg-surface: #141417;      /* zinc-900 surface */
-  --bg-surface-elevated: #1c1c21;
-  --bg-input: #0e0e11;
-  --bg-command: rgba(14, 14, 17, 0.95);
+  /* Pitch Black Vercel Palette */
+  --bg-page: #000000;
+  --bg-header: rgba(0, 0, 0, 0.85);
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #111111;
+  --bg-input: #0a0a0a;
+  --bg-input-focus: #111111;
 
-  /* Precise Enterprise Accents */
-  --accent-blue: #3b82f6;     /* blue-500 */
-  --accent-cyan: #06b6d4;     /* cyan-500 */
-  --accent-emerald: #10b981;  /* emerald-500 */
-  --accent-amber: #f59e0b;    /* amber-500 */
-  --accent-rose: #f43f5e;     /* rose-500 */
-
-  /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-focus: #3b82f6;
+  /* Crisp Vercel Borders */
+  --border-subtle: #1f1f1f;
+  --border-medium: #333333;
+  --border-active: #ffffff;
 
   /* Typography */
-  --text-main: #f4f4f5;       /* zinc-100 */
-  --text-dim: #a1a1aa;        /* zinc-400 */
-  --text-muted: #71717a;      /* zinc-500 */
+  --text-main: #ffffff;
+  --text-dim: #888888;
+  --text-muted: #666666;
+
+  /* Accents */
+  --accent-white: #ffffff;
+  --accent-emerald: #10b981;
+  --accent-blue: #0070f3;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
 
   /* Radii */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
   /* Fonts */
-  --font-sans: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Geist', 'Inter', -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-app);
+  background-color: var(--bg-page);
   color: var(--text-main);
   font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle Studio Grid Overlay */
-.studio-grid-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-}
-
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(9, 9, 11, 0.8);
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: #222222;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #444444;
 }
 
-/* Pro Workbench Card */
-.wb-card {
-  background: var(--bg-surface);
+/* Vercel Card Container */
+.vercel-card {
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.wb-card:hover {
+.vercel-card:hover {
   border-color: var(--border-medium);
 }
 
-/* Enterprise Canvas Textarea */
-textarea.wb-canvas {
+/* Vercel Action Card (Preset) */
+.vercel-preset-card {
+  background: #0a0a0a;
+  border: 1px solid #1f1f1f;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.vercel-preset-card:hover {
+  background: #111111;
+  border-color: #444444;
+  transform: translateY(-1px);
+}
+
+/* Vercel Canvas Input */
+textarea.vercel-input {
   width: 100%;
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
@@ -100,151 +105,127 @@ textarea.wb-canvas {
   color: var(--text-main);
   padding: 14px;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   resize: vertical;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-textarea.wb-canvas:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+textarea.vercel-input:focus {
+  background: var(--bg-input-focus);
+  border-color: var(--border-medium);
+  box-shadow: 0 0 0 1px var(--border-medium);
 }
 
-/* Input Fields & Selects */
-select.wb-select, input.wb-input {
+/* Vercel Select & Input */
+select.vercel-select, input.vercel-field {
   width: 100%;
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   color: var(--text-main);
   padding: 8px 12px;
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-select.wb-select:focus, input.wb-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+select.vercel-select:focus, input.vercel-field:focus {
+  border-color: var(--border-medium);
 }
 
-select.wb-select option {
-  background-color: #141417;
-  color: #f4f4f5;
-}
-
-/* Pro Action Button Primary */
-.btn-wb-primary {
-  background: #2563eb;
+select.vercel-select option {
+  background-color: #0a0a0a;
   color: #ffffff;
+}
+
+/* Vercel Primary Button */
+.btn-vercel-primary {
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
   font-size: 0.85rem;
-  padding: 10px 20px;
-  border-radius: var(--radius-xs);
-  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #ffffff;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  transition: all 0.15s ease;
 }
 
-.btn-wb-primary:hover:not(:disabled) {
-  background: #1d4ed8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+.btn-vercel-primary:hover:not(:disabled) {
+  background: #cccccc;
+  border-color: #cccccc;
 }
 
-.btn-wb-primary:disabled {
+.btn-vercel-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Pro Action Button Secondary */
-.btn-wb-secondary {
-  background: rgba(255, 255, 255, 0.05);
+/* Vercel Secondary Button */
+.btn-vercel-secondary {
+  background: #000000;
   border: 1px solid var(--border-subtle);
   color: var(--text-main);
   font-weight: 500;
   font-size: 0.8rem;
-  padding: 8px 14px;
-  border-radius: var(--radius-xs);
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.btn-wb-secondary:hover {
-  background: rgba(255, 255, 255, 0.09);
+.btn-vercel-secondary:hover {
+  background: #111111;
   border-color: var(--border-medium);
 }
 
-/* Enterprise Badges */
-.wb-badge {
+/* Vercel Badge */
+.vercel-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.725rem;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
   font-weight: 600;
   font-family: var(--font-mono);
-  letter-spacing: 0.02em;
 }
 
-.wb-badge-blue {
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #60a5fa;
+.vercel-badge-neutral {
+  background: #111111;
+  border: 1px solid #222222;
+  color: #888888;
 }
 
-.wb-badge-emerald {
-  background: rgba(16, 185, 129, 0.12);
+.vercel-badge-emerald {
+  background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #34d399;
+  color: #10b981;
 }
 
-.wb-badge-rose {
-  background: rgba(244, 63, 94, 0.12);
+.vercel-badge-rose {
+  background: rgba(244, 63, 94, 0.1);
   border: 1px solid rgba(244, 63, 94, 0.3);
-  color: #f87171;
+  color: #f43f5e;
 }
 
-.wb-badge-neutral {
-  background: rgba(255, 255, 255, 0.05);
+/* Vercel Code Block */
+pre.vercel-code {
+  background: #000000;
   border: 1px solid var(--border-subtle);
-  color: var(--text-dim);
-}
-
-/* Code Preview */
-pre.code-block {
-  background: #09090b;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   padding: 14px;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: #a1a1aa;
+  font-size: 0.775rem;
+  color: #888888;
   overflow-x: auto;
-}
-
-/* Pulsing Status Dot */
-.dot-emerald {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-.dot-rose {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #f43f5e;
-  box-shadow: 0 0 8px #f43f5e;
 }

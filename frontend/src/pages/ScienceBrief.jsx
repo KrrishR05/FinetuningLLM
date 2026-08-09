@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Microscope, FileText, UploadCloud, Sliders, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash } from 'lucide-react'
+import { Microscope, FileText, UploadCloud, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap } from 'lucide-react'
 
 const SAMPLE_SCIENCE_TEXT = `TITLE: Quantum Phase Transitions in Superconducting Qubits
 AUTHORS: Dr. A. Sharma, Prof. R. Patel (IISc Bangalore, 2026)
@@ -44,10 +44,11 @@ export default function ScienceBrief({ settings, selectedModel }) {
     }
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (overrideText) => {
     let sourcePages = pages
-    if (!sourcePages.length && text.trim()) {
-      sourcePages = [{ page_number: 1, text: text, source_label: 'Pasted Text' }]
+    const textToUse = overrideText !== undefined ? overrideText : text
+    if (!sourcePages.length && textToUse.trim()) {
+      sourcePages = [{ page_number: 1, text: textToUse, source_label: 'Pasted Text' }]
     }
     if (!sourcePages.length) return
 
@@ -76,6 +77,11 @@ export default function ScienceBrief({ settings, selectedModel }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const runPreset = (sampleText) => {
+    setText(sampleText)
+    handleGenerate(sampleText)
   }
 
   const copyResult = () => {
@@ -109,53 +115,86 @@ export default function ScienceBrief({ settings, selectedModel }) {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-          <Microscope size={20} className="text-blue-400" /> S&T Document Research Brief
-        </h2>
-        <p className="text-xs text-[var(--text-dim)] mt-0.5">
+        <h2 className="text-xl font-semibold text-white tracking-tight">S&T Research Paper Brief</h2>
+        <p className="text-xs text-[#888888] mt-1 font-mono">
           Map-Reduce structural analysis for scientific publications, technical papers, and engineering reports.
         </p>
       </div>
 
-      {/* Main Grid */}
+      {/* Preset Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onClick={() => runPreset(SAMPLE_SCIENCE_TEXT)} className="vercel-preset-card group">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-mono font-semibold text-white group-hover:text-purple-400 flex items-center gap-1.5">
+              <Microscope size={14} className="text-purple-400" /> Quantum Physics Paper
+            </span>
+            <span className="text-[0.65rem] font-mono text-[#666666]">PRESET 01</span>
+          </div>
+          <p className="text-xs text-[#888888] leading-relaxed">
+            Extract methodology, key findings, and limitations from a 2026 quantum qubit paper.
+          </p>
+        </button>
+
+        <button onClick={() => runPreset(SAMPLE_SCIENCE_TEXT)} className="vercel-preset-card group">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-mono font-semibold text-white group-hover:text-blue-400 flex items-center gap-1.5">
+              <Zap size={14} className="text-blue-400" /> Empirical Findings
+            </span>
+            <span className="text-[0.65rem] font-mono text-[#666666]">PRESET 02</span>
+          </div>
+          <p className="text-xs text-[#888888] leading-relaxed">
+            Isolate quantitative critical thresholds, coherence times, and temperature bounds.
+          </p>
+        </button>
+
+        <button onClick={() => runPreset(SAMPLE_SCIENCE_TEXT)} className="vercel-preset-card group">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-mono font-semibold text-white group-hover:text-emerald-400 flex items-center gap-1.5">
+              <FileText size={14} className="text-emerald-400" /> Map-Reduce Full Brief
+            </span>
+            <span className="text-[0.65rem] font-mono text-[#666666]">PRESET 03</span>
+          </div>
+          <p className="text-xs text-[#888888] leading-relaxed">
+            Full 11-field structured breakdown with citation page references.
+          </p>
+        </button>
+      </div>
+
+      {/* Main Single Pane Playground */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-3">
-          <div className="wb-card p-5">
-            <div className="flex items-center justify-between mb-3 border-b border-[var(--border-subtle)] pb-3">
+        <div className="lg:col-span-8 space-y-4">
+          <div className="vercel-card p-5">
+            <div className="flex items-center justify-between mb-3 border-b border-[#1f1f1f] pb-3">
               <div className="flex gap-2">
                 <button
                   onClick={() => setInputMode('text')}
-                  className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                    inputMode === 'text' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    inputMode === 'text' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                   }`}
                 >
-                  <FileText size={13} /> Raw Paper Text
+                  <FileText size={12} className="inline mr-1.5" /> Paper Text
                 </button>
                 <button
                   onClick={() => setInputMode('upload')}
-                  className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                    inputMode === 'upload' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    inputMode === 'upload' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                   }`}
                 >
-                  <UploadCloud size={13} /> Upload Paper (.pdf)
+                  <UploadCloud size={12} className="inline mr-1.5" /> Upload (.pdf)
                 </button>
               </div>
 
               <div className="flex items-center gap-2">
-                {inputMode === 'text' && (
-                  <>
-                    <button onClick={() => setText(SAMPLE_SCIENCE_TEXT)} className="btn-wb-secondary text-[0.7rem] !py-1 !px-2">
-                      <FileCode size={12} /> Insert Sample Paper
-                    </button>
-                    {text && (
-                      <button onClick={() => setText('')} className="btn-wb-secondary text-[0.7rem] !py-1 !px-2 text-rose-400">
-                        <Trash size={12} /> Clear
-                      </button>
-                    )}
-                  </>
+                <button onClick={() => setText(SAMPLE_SCIENCE_TEXT)} className="btn-vercel-secondary text-xs !py-1">
+                  <FileCode size={12} /> Load Paper
+                </button>
+                {text && (
+                  <button onClick={() => setText('')} className="btn-vercel-secondary text-xs !py-1 text-rose-400">
+                    <Trash size={12} /> Clear
+                  </button>
                 )}
               </div>
             </div>
@@ -165,43 +204,40 @@ export default function ScienceBrief({ settings, selectedModel }) {
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Paste research paper abstract, methodology, or full text..."
-                rows={11}
-                className="wb-canvas font-mono text-xs leading-relaxed"
+                rows={10}
+                className="vercel-input font-mono text-xs leading-relaxed"
               />
             ) : (
-              <div className="border border-dashed border-zinc-700/80 hover:border-blue-500 rounded-lg p-8 text-center bg-black/40">
-                <Microscope size={32} className="mx-auto text-blue-400 mb-2" />
-                <p className="text-xs font-semibold text-white">Upload research paper or patent</p>
-                <p className="text-[0.7rem] text-slate-400 mt-0.5">PDF, DOCX formats supported</p>
-                <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" id="st-upload-2" />
-                <label htmlFor="st-upload-2" className="btn-wb-secondary text-xs mt-3 inline-flex">
+              <div className="border border-dashed border-[#222222] hover:border-[#444444] rounded-md p-8 text-center bg-[#000000]">
+                <Microscope size={28} className="mx-auto text-[#888888] mb-2" />
+                <p className="text-xs font-semibold text-white">Upload scientific paper</p>
+                <p className="text-[0.7rem] text-[#666666] mt-0.5 font-mono">PDF, DOCX supported</p>
+                <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" id="v-st-upload" />
+                <label htmlFor="v-st-upload" className="btn-vercel-secondary text-xs mt-3 inline-flex">
                   Select File
                 </label>
                 {pages.length > 0 && (
-                  <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs text-emerald-400 text-left">
-                    Document parsed into {pages.length} pages.
+                  <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs text-emerald-400 text-left font-mono">
+                    Parsed {pages.length} pages into Map-Reduce memory.
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          {error && <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-400">{error}</div>}
+          {error && <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-md text-xs text-rose-400">{error}</div>}
         </div>
 
         <div className="lg:col-span-4">
-          <div className="wb-card p-5 space-y-5">
-            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-3">
-              <Sliders size={15} className="text-blue-400" />
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Map-Reduce Settings</h3>
-            </div>
+          <div className="vercel-card p-5 space-y-4">
+            <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider border-b border-[#1f1f1f] pb-2">
+              Chunk Window
+            </h3>
 
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider">
-                  Chunk Size
-                </label>
-                <span className="text-[0.7rem] font-mono text-blue-400">{chunkSize} chars</span>
+              <div className="flex justify-between items-center mb-1 font-mono text-[0.7rem] text-[#888888]">
+                <span>Chunk Size</span>
+                <span className="text-white">{chunkSize} chars</span>
               </div>
               <input
                 type="range"
@@ -210,21 +246,22 @@ export default function ScienceBrief({ settings, selectedModel }) {
                 step="500"
                 value={chunkSize}
                 onChange={e => setChunkSize(parseInt(e.target.value))}
+                className="w-full"
               />
             </div>
 
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               disabled={loading || (!pages.length && !text.trim())}
-              className="btn-wb-primary w-full py-2.5 text-xs"
+              className="btn-vercel-primary w-full py-2.5 text-xs"
             >
               {loading ? (
                 <>
-                  <div className="studio-spinner" /> Synthesizing Map-Reduce Brief...
+                  <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Synthesizing Map-Reduce...
                 </>
               ) : (
                 <>
-                  <Microscope size={14} /> Generate Brief <ArrowRight size={13} />
+                  Generate Research Brief <ArrowRight size={13} />
                 </>
               )}
             </button>
@@ -236,41 +273,38 @@ export default function ScienceBrief({ settings, selectedModel }) {
       <AnimatePresence>
         {result?.brief && (
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="wb-card p-6 space-y-4 border-blue-500/30"
+            className="vercel-card p-6 space-y-4 border-white/20"
           >
-            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
-              <div className="flex items-center gap-3">
-                <span className="wb-badge wb-badge-blue text-[0.65rem]">RESEARCH BRIEF</span>
-                <h3 className="text-base font-bold text-white">Structured S&T Findings</h3>
-              </div>
+            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
+              <span className="vercel-badge vercel-badge-neutral">S&T BRIEF OUTPUT</span>
 
               <div className="flex items-center gap-2">
-                <div className="flex bg-black/40 p-0.5 rounded border border-white/10 text-xs">
+                <div className="flex bg-[#000000] p-0.5 rounded border border-[#222222] text-xs">
                   <button
                     onClick={() => setViewTab('rendered')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium flex items-center gap-1 ${
-                      viewTab === 'rendered' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                      viewTab === 'rendered' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Eye size={12} /> Rendered Cards
+                    <Eye size={12} className="inline mr-1" /> Cards
                   </button>
                   <button
                     onClick={() => setViewTab('json')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium flex items-center gap-1 ${
-                      viewTab === 'json' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                      viewTab === 'json' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Code size={12} /> JSON Response
+                    <Code size={12} className="inline mr-1" /> JSON
                   </button>
                 </div>
 
-                <button onClick={copyResult} className="btn-wb-secondary text-xs">
-                  <Copy size={13} /> {copied ? 'Copied!' : 'Copy'}
+                <button onClick={copyResult} className="btn-vercel-secondary text-xs">
+                  <Copy size={12} /> {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <button onClick={downloadBrief} className="btn-wb-secondary text-xs">
-                  <Download size={13} /> TXT
+                <button onClick={downloadBrief} className="btn-vercel-secondary text-xs">
+                  <Download size={12} /> TXT
                 </button>
               </div>
             </div>
@@ -281,24 +315,24 @@ export default function ScienceBrief({ settings, selectedModel }) {
                   const val = result.brief[field]
                   if (!val) return null
                   return (
-                    <div key={field} className="p-3 bg-zinc-900/60 border border-white/5 rounded space-y-1">
-                      <span className="text-[0.65rem] font-mono font-bold text-blue-400 uppercase tracking-wider block">
+                    <div key={field} className="p-3 bg-[#000000] border border-[#1f1f1f] rounded space-y-1">
+                      <span className="text-[0.65rem] font-mono font-bold text-[#888888] uppercase block">
                         {field}
                       </span>
-                      <p className="text-xs text-slate-200 leading-relaxed">{val}</p>
+                      <p className="text-xs text-[#dddddd] leading-relaxed">{val}</p>
                     </div>
                   )
                 })}
               </div>
             ) : (
-              <pre className="code-block">{JSON.stringify(result, null, 2)}</pre>
+              <pre className="vercel-code">{JSON.stringify(result, null, 2)}</pre>
             )}
 
-            <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)] text-[0.7rem] font-mono text-slate-500">
+            <div className="flex items-center justify-between pt-3 border-t border-[#1f1f1f] text-[0.7rem] font-mono text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} className="text-blue-400" /> Latency: {result.latency_seconds}s
+                <Clock size={12} /> Latency: {result.latency_seconds}s
               </span>
-              <span>Chunks: {result.num_chunks || 1}</span>
+              <span>Chunks Processed: {result.num_chunks || 1}</span>
             </div>
           </motion.div>
         )}
