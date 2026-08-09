@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, FileText, UploadCloud, Sliders, Download, CheckCircle, Clock, Cpu, ArrowRight } from 'lucide-react'
+import { Sparkles, FileText, UploadCloud, Sliders, Download, CheckCircle, Clock, Cpu, ArrowRight, Copy, Trash, FileCode, Eye, Code } from 'lucide-react'
+
+const SAMPLE_TEXT = `Learning is a lifelong journey that shapes the mind and expands our understanding of the world. Every single day gives us new chances to gain knowledge, build skills, and experience growth through curiosity. While challenges may appear, persistence helps us overcome obstacles and find fresh perspectives. As individuals develop, they also learn vital lessons about empathy, responsibility, and cooperation. Ultimately, this ongoing process enriches our daily lives, unlocks hidden potential, and opens doors to a future filled with bright new possibilities, achievements, and meaningful connections with everyone around us.`
 
 export default function Summarizer({ settings, selectedModel }) {
   const [inputMode, setInputMode] = useState('text')
@@ -9,9 +11,11 @@ export default function Summarizer({ settings, selectedModel }) {
   const [extractedInfo, setExtractedInfo] = useState(null)
   const [targetLength, setTargetLength] = useState('100 words')
   const [outputFormat, setOutputFormat] = useState('bullets')
+  const [viewTab, setViewTab] = useState('rendered')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const handleFileUpload = async (e) => {
     const uploadedFile = e.target.files[0]
@@ -61,10 +65,18 @@ export default function Summarizer({ settings, selectedModel }) {
       if (data.status === 'success') setResult(data)
       else setError(data.error || 'Summarization failed.')
     } catch {
-      setError('Connection failed. Please ensure local servers are running.')
+      setError('Connection failed.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const copyResult = () => {
+    if (!result) return
+    const textToCopy = `TITLE: ${result.title}\n\nSUMMARY:\n${result.summary}\n\nKEY POINTS:\n` + (result.bullets || []).map(b => `- ${b}`).join('\n')
+    navigator.clipboard.writeText(textToCopy)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const downloadSummary = () => {
@@ -77,7 +89,7 @@ export default function Summarizer({ settings, selectedModel }) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `summary_${(result.title || 'document').slice(0, 20).replace(/\s+/g, '_')}.txt`
+    a.download = `summary_${(result.title || 'doc').slice(0, 20).replace(/\s+/g, '_')}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -86,79 +98,100 @@ export default function Summarizer({ settings, selectedModel }) {
   const charCount = text.length
 
   return (
-    <div className="space-y-8">
-      {/* Studio Header */}
-      <div>
-        <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
-          <Sparkles size={24} className="text-cyan-400" /> AI/ML Intelligence Summarizer
-        </h2>
-        <p className="text-sm text-[var(--text-dim)] mt-1">
-          Extract structural bullet points or executive synopses from raw text and multi-format documents.
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+            <Sparkles size={20} className="text-blue-400" /> AI/ML Intelligence Summarizer
+          </h2>
+          <p className="text-xs text-[var(--text-dim)] mt-0.5">
+            Synthesize unstructured document feeds into executive bullet points or structured synopses.
+          </p>
+        </div>
       </div>
 
-      {/* Main Studio Grid: Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Input Canvas (Col 8) */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="studio-card p-6">
-            {/* Input Mode Selector */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex gap-2 bg-black/40 p-1 rounded-xl border border-[var(--border-subtle)]">
+      {/* Main Workbench Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Input Canvas (Col 8) */}
+        <div className="lg:col-span-8 space-y-3">
+          <div className="wb-card p-5">
+            {/* Action Bar */}
+            <div className="flex items-center justify-between mb-3 border-b border-[var(--border-subtle)] pb-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setInputMode('text')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
-                    inputMode === 'text' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                  className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    inputMode === 'text' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <FileText size={14} /> Paste Text
+                  <FileText size={13} /> Raw Text
                 </button>
                 <button
                   onClick={() => setInputMode('upload')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
-                    inputMode === 'upload' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                  className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    inputMode === 'upload' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <UploadCloud size={14} /> Upload Doc
+                  <UploadCloud size={13} /> Upload File
                 </button>
               </div>
 
-              {wordCount > 0 && (
-                <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
-                  <span>{wordCount.toLocaleString()} words</span>
-                  <span>•</span>
-                  <span>{charCount.toLocaleString()} chars</span>
-                </div>
-              )}
+              {/* Quick Action Pills */}
+              <div className="flex items-center gap-2">
+                {inputMode === 'text' && (
+                  <>
+                    <button
+                      onClick={() => setText(SAMPLE_TEXT)}
+                      className="btn-wb-secondary text-[0.7rem] !py-1 !px-2"
+                    >
+                      <FileCode size={12} /> Insert Sample
+                    </button>
+                    {text && (
+                      <button
+                        onClick={() => setText('')}
+                        className="btn-wb-secondary text-[0.7rem] !py-1 !px-2 text-rose-400 hover:border-rose-500/30"
+                      >
+                        <Trash size={12} /> Clear
+                      </button>
+                    )}
+                  </>
+                )}
+                {wordCount > 0 && (
+                  <span className="wb-badge wb-badge-neutral text-[0.68rem]">
+                    {wordCount.toLocaleString()} words
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Editor Canvas or Upload Zone */}
+            {/* Canvas Input Area */}
             {inputMode === 'text' ? (
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Paste unstructured text, research notes, or reports here..."
-                rows={12}
-                className="studio-canvas"
+                placeholder="Paste paragraph text or report draft here..."
+                rows={11}
+                className="wb-canvas font-sans text-xs leading-relaxed"
               />
             ) : (
-              <div className="border-2 border-dashed border-slate-700/60 hover:border-cyan-500/50 rounded-xl p-10 text-center transition-colors bg-black/20">
-                <UploadCloud size={36} className="mx-auto text-cyan-400 mb-3" />
-                <p className="text-sm font-semibold text-white">Upload document file</p>
-                <p className="text-xs text-slate-400 mt-1">Supports PDF, DOCX, TXT formats</p>
+              <div className="border border-dashed border-zinc-700/80 hover:border-blue-500 rounded-lg p-8 text-center bg-black/40">
+                <UploadCloud size={32} className="mx-auto text-blue-400 mb-2" />
+                <p className="text-xs font-semibold text-white">Upload document file</p>
+                <p className="text-[0.7rem] text-slate-400 mt-0.5">PDF, DOCX, TXT formats supported</p>
                 <input
                   type="file"
                   accept=".pdf,.docx,.txt"
                   onChange={handleFileUpload}
                   className="hidden"
-                  id="doc-upload"
+                  id="doc-upload-2"
                 />
-                <label htmlFor="doc-upload" className="btn-studio-secondary text-xs mt-4 inline-flex">
-                  Choose File
+                <label htmlFor="doc-upload-2" className="btn-wb-secondary text-xs mt-3 inline-flex">
+                  Select File
                 </label>
 
                 {extractedInfo && (
-                  <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 text-left">
+                  <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs text-emerald-400 text-left">
                     Extracted {extractedInfo.num_pages || 1} pages, {extractedInfo.word_count || wordCount} words.
                   </div>
                 )}
@@ -167,65 +200,62 @@ export default function Summarizer({ settings, selectedModel }) {
           </div>
 
           {error && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">
+            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-400">
               {error}
             </div>
           )}
         </div>
 
-        {/* Right Parameter Studio Controls (Col 4) */}
+        {/* Pro Studio Parameters (Col 4) */}
         <div className="lg:col-span-4">
-          <div className="studio-card p-6 studio-card-glow space-y-6">
-            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-4">
-              <Sliders size={16} className="text-cyan-400" />
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Summarizer Controls</h3>
+          <div className="wb-card p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-3">
+              <Sliders size={15} className="text-blue-400" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Summarizer Controls</h3>
             </div>
 
-            {/* Target Length Slider / Select */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+              <label className="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                 Target Summary Length
               </label>
               <select
                 value={targetLength}
                 onChange={e => setTargetLength(e.target.value)}
-                className="studio-select"
+                className="wb-select"
               >
                 <option value="50 words">50 words (Concise Snapshot)</option>
                 <option value="100 words">100 words (Balanced Synopsis)</option>
                 <option value="250 words">250 words (Extended Executive)</option>
-                <option value="Detailed">Detailed (Full Sectional Breakdown)</option>
+                <option value="Detailed">Detailed (Full Breakdown)</option>
               </select>
             </div>
 
-            {/* Structural Format */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+              <label className="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                 Output Format Structure
               </label>
               <select
                 value={outputFormat}
                 onChange={e => setOutputFormat(e.target.value)}
-                className="studio-select"
+                className="wb-select"
               >
                 <option value="bullets">Bullet Points & Key Takeaways</option>
-                <option value="paragraph">Executive Synthesis Paragraph</option>
+                <option value="paragraph">Executive Paragraph</option>
               </select>
             </div>
 
-            {/* Primary Action Button */}
             <button
               onClick={handleSummarize}
               disabled={loading || !text.trim()}
-              className="btn-studio-primary w-full py-3 text.sm"
+              className="btn-wb-primary w-full py-2.5 text-xs"
             >
               {loading ? (
                 <>
-                  <div className="studio-spinner" /> Synthesizing Summary...
+                  <div className="studio-spinner" /> Processing Local LLM...
                 </>
               ) : (
                 <>
-                  <Sparkles size={16} /> Generate Summary <ArrowRight size={14} />
+                  <Sparkles size={14} /> Generate Summary <ArrowRight size={13} />
                 </>
               )}
             </button>
@@ -233,60 +263,107 @@ export default function Summarizer({ settings, selectedModel }) {
         </div>
       </div>
 
-      {/* Output Results Workbench */}
+      {/* Multi-View Output Workbench */}
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="studio-card p-8 space-y-6 border-cyan-500/30"
+            className="wb-card p-6 space-y-4 border-blue-500/30"
           >
-            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
-              <div>
-                <span className="text-[0.65rem] font-bold text-cyan-400 uppercase tracking-widest block mb-1">
-                  Synthesized Result
-                </span>
-                <h3 className="text-xl font-bold text-white">{result.title}</h3>
+            {/* View Selector & Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
+              <div className="flex items-center gap-3">
+                <span className="wb-badge wb-badge-blue text-[0.65rem]">OUTPUT</span>
+                <h3 className="text-base font-bold text-white">{result.title}</h3>
               </div>
-              <button onClick={downloadSummary} className="btn-studio-secondary text-xs">
-                <Download size={14} /> Export TXT
-              </button>
-            </div>
 
-            {/* Executive Summary Box */}
-            <div className="p-5 bg-slate-900/80 border-l-4 border-cyan-500 rounded-r-xl text-sm leading-relaxed text-slate-200">
-              {result.summary}
-            </div>
-
-            {/* Key Takeaways Bullets */}
-            {result.bullets?.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Takeaways</h4>
-                <div className="space-y-2">
-                  {result.bullets.map((bullet, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="p-3 bg-black/40 border border-white/5 rounded-xl flex items-start gap-3 text-sm text-slate-300"
-                    >
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0 mt-0.5" />
-                      <span>{bullet}</span>
-                    </motion.div>
-                  ))}
+              {/* View Switcher Tabs */}
+              <div className="flex items-center gap-2">
+                <div className="flex bg-black/40 p-0.5 rounded border border-white/10 text-xs">
+                  <button
+                    onClick={() => setViewTab('rendered')}
+                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium flex items-center gap-1 ${
+                      viewTab === 'rendered' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Eye size={12} /> Rendered View
+                  </button>
+                  <button
+                    onClick={() => setViewTab('markdown')}
+                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium flex items-center gap-1 ${
+                      viewTab === 'markdown' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <FileCode size={12} /> Raw Markdown
+                  </button>
+                  <button
+                    onClick={() => setViewTab('json')}
+                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium flex items-center gap-1 ${
+                      viewTab === 'json' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Code size={12} /> JSON API Response
+                  </button>
                 </div>
+
+                <button onClick={copyResult} className="btn-wb-secondary text-xs">
+                  <Copy size={13} /> {copied ? 'Copied!' : 'Copy'}
+                </button>
+                <button onClick={downloadSummary} className="btn-wb-secondary text-xs">
+                  <Download size={13} /> TXT
+                </button>
+              </div>
+            </div>
+
+            {/* Rendered View */}
+            {viewTab === 'rendered' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-zinc-900 border-l-2 border-blue-500 rounded-r text-xs leading-relaxed text-slate-200">
+                  {result.summary}
+                </div>
+
+                {result.bullets?.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[0.68rem] font-bold text-slate-400 uppercase tracking-wider block">Key Takeaways</span>
+                    {result.bullets.map((bullet, idx) => (
+                      <div key={idx} className="p-2.5 bg-black/40 border border-white/5 rounded text-xs text-slate-300 flex items-start gap-2.5">
+                        <CheckCircle size={14} className="text-blue-400 shrink-0 mt-0.5" />
+                        <span>{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Latency & Telemetry Metadata */}
-            <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-slate-400 font-mono">
-              <span className="flex items-center gap-2">
-                <Clock size={14} className="text-cyan-400" /> Latency: {result.latency_seconds}s
+            {/* Markdown View */}
+            {viewTab === 'markdown' && (
+              <pre className="code-block">
+{`# ${result.title}
+
+## Executive Summary
+${result.summary}
+
+## Key Points
+${(result.bullets || []).map(b => `- ${b}`).join('\n')}`}
+              </pre>
+            )}
+
+            {/* JSON View */}
+            {viewTab === 'json' && (
+              <pre className="code-block">
+{JSON.stringify(result, null, 2)}
+              </pre>
+            )}
+
+            {/* Footer Telemetry */}
+            <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)] text-[0.7rem] font-mono text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <Clock size={12} className="text-blue-400" /> Execution Latency: {result.latency_seconds}s
               </span>
-              <span className="flex items-center gap-2">
-                <Cpu size={14} className="text-emerald-400" /> Engine: {result.model_name}
+              <span className="flex items-center gap-1.5">
+                <Cpu size={12} className="text-emerald-400" /> Active Model: {result.model_name}
               </span>
             </div>
           </motion.div>
