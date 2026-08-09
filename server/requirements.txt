@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+pymupdf
+python-docx
+python-pptx
+openpyxl
