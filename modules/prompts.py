@@ -1,9 +1,9 @@
 def quick_summary_prompt(text: str, length: str = "100 words", fmt: str = "bullets") -> str:
     word_guidelines = {
-        "50 words": "Provide a concise 2-3 sentence executive overview (approx 50 words).",
-        "100 words": "Provide a well-balanced executive overview (approx 100 words).",
-        "250 words": "Provide a detailed, comprehensive executive overview (approx 250 words).",
-        "Detailed": "Provide an in-depth, thorough executive breakdown."
+        "50 words": "STRICT LENGTH REQUIREMENT: Write a brief executive snapshot. The Summary paragraph MUST be 2 to 3 sentences (approx 40-60 words total). Provide 2-3 key points.",
+        "100 words": "STRICT LENGTH REQUIREMENT: Write a balanced overview. The Summary paragraph MUST be 4 to 5 sentences (approx 90-110 words total). Provide 4-5 key points.",
+        "250 words": "STRICT LENGTH REQUIREMENT: Write an extended detailed report. The Summary paragraph MUST be comprehensive (approx 220-280 words total). Provide 6-8 detailed key points.",
+        "Detailed": "STRICT LENGTH REQUIREMENT: Write an in-depth breakdown. The Summary paragraph MUST be highly detailed (approx 350-500 words total). Provide 8-12 thorough key points."
     }
     length_desc = word_guidelines.get(length, f"Target length: {length}.")
 

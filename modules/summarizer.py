@@ -93,6 +93,17 @@ def summarize_text(
             "error": "No input text provided to summarize.",
         }
 
+    # Dynamically scale max_tokens based on requested target length
+    effective_max_tokens = max_tokens
+    if length == "50 words":
+        effective_max_tokens = min(max_tokens, 300)
+    elif length == "100 words":
+        effective_max_tokens = max(max_tokens, 600)
+    elif length == "250 words":
+        effective_max_tokens = max(max_tokens, 1100)
+    elif length == "Detailed":
+        effective_max_tokens = max(max_tokens, 1600)
+
     prompt = quick_summary_prompt(text=text, length=length, fmt=fmt)
 
     t0 = time.time()
@@ -101,7 +112,7 @@ def summarize_text(
         model_id=model_id,
         system_prompt=system_prompt,
         temperature=temperature,
-        max_tokens=max_tokens,
+        max_tokens=effective_max_tokens,
         keep_alive=keep_alive,
     )
 

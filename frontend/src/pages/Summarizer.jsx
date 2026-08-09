@@ -60,7 +60,7 @@ export default function Summarizer({ settings, selectedModel }) {
           text: textToSummarize,
           model_id: selectedModel,
           length: lengthToUse,
-          format: formatToUse,
+          fmt: formatToUse,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
           system_prompt: settings.systemPrompt || null,
