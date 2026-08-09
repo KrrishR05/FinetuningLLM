@@ -45,12 +45,8 @@ export default function ScienceBrief({ settings, selectedModel }) {
   }
 
   const handleGenerate = async (overrideText) => {
-    let sourcePages = pages
     const textToUse = overrideText !== undefined ? overrideText : text
-    if (!sourcePages.length && textToUse.trim()) {
-      sourcePages = [{ page_number: 1, text: textToUse, source_label: 'Pasted Text' }]
-    }
-    if (!sourcePages.length) return
+    if (!textToUse.trim()) return
 
     setLoading(true)
     setError('')
@@ -60,13 +56,13 @@ export default function ScienceBrief({ settings, selectedModel }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pages: sourcePages,
+          text: textToUse,
+          chunk_size: chunkSize,
           model_id: selectedModel,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
           system_prompt: settings.systemPrompt || null,
           auto_unload: settings.autoUnload,
-          max_chunk_chars: chunkSize,
         }),
       })
       const data = await res.json()
