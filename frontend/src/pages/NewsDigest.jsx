@@ -18,8 +18,9 @@ export default function NewsDigest({ settings, selectedModel }) {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const handleGenerate = async (overrideText) => {
+  const handleGenerate = async (overrideTopic, overrideText) => {
     const textToUse = overrideText !== undefined ? overrideText : text
+    const topicToUse = overrideTopic !== undefined ? overrideTopic : topic
     if (!textToUse.trim()) return
 
     setLoading(true)
@@ -31,7 +32,7 @@ export default function NewsDigest({ settings, selectedModel }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: textToUse,
-          topic,
+          topic: topicToUse,
           model_id: selectedModel,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
@@ -51,9 +52,10 @@ export default function NewsDigest({ settings, selectedModel }) {
   }
 
   const runPreset = (sampleText, topicFilter) => {
-    setText(sampleText)
-    if (topicFilter) setTopic(topicFilter)
-    handleGenerate(sampleText)
+    setTopic(topicFilter)
+    if (text.trim()) {
+      handleGenerate(topicFilter, text)
+    }
   }
 
   const copyResult = () => {
@@ -86,7 +88,7 @@ export default function NewsDigest({ settings, selectedModel }) {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-white tracking-tight">News Digest & Fact/Opinion Matrix</h2>
+        <h2 className="text-2xl font-bold gradient-heading tracking-tight">News Digest & Fact/Opinion Matrix</h2>
         <p className="text-xs text-[#888888] mt-1 font-mono">
           Dissect media streams, press releases, and editorials into empirical facts versus subjective opinions.
         </p>

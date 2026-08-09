@@ -15,55 +15,69 @@ from modules.model_adapter import ModelAdapter
 def parse_summary_response(response_text: str, fmt: str = "bullets") -> Dict[str, Any]:
     """
     Parses structured title, summary, and bullet points from raw LLM output text.
+    Handles Gemma thinking tags, markdown artifacts, and various LLM output quirks.
     """
     title = ""
     summary = ""
     bullets: List[str] = []
 
     clean_text = response_text.strip()
-    # Strip internal Gemma/channel thinking tags (<|channel>thought...<channel|>)
-    if "<channel|>" in clean_text:
-        clean_text = re.sub(r"<\|channel\b.*?<channel\|>", "", clean_text, flags=re.DOTALL).strip()
-    else:
-        clean_text = re.sub(r"^<\|channel\b.*?(?=\n(?:Title|Summary|\*\*Title|\*\*Summary|#)|$)", "", clean_text, flags=re.DOTALL).strip()
 
+    # Strip Gemma 4 E2B internal thinking/channel tags
+    clean_text = re.sub(r"<\|channel\b.*?channel\|>", "", clean_text, flags=re.DOTALL).strip()
+    clean_text = re.sub(r"<\|?thinking\|?>.*?<\|?/thinking\|?>", "", clean_text, flags=re.DOTALL).strip()
+    clean_text = re.sub(r"<\|?channel\b[^>]*>.*?$", "", clean_text, flags=re.DOTALL).strip()
+
+    # Strip markdown heading markers (## Title:, **Title:**)
+    clean_text = re.sub(r"^#{1,4}\s*", "", clean_text, flags=re.MULTILINE)
+    clean_text = re.sub(r"\*\*(Title|Summary|Key Points|Key Takeaways):\*\*", r"\1:", clean_text, flags=re.IGNORECASE)
 
     # Extract Title
-    title_match = re.search(r"(?:Title|TITLE):\s*(.*?)(?=\n|Summary|Key Points|$)", clean_text, re.IGNORECASE)
+    title_match = re.search(r"(?:Title|TITLE)\s*:\s*(.+?)(?:\n|$)", clean_text, re.IGNORECASE)
     if title_match:
         title = title_match.group(1).strip()
-        title = re.sub(r"^[\*\#\s'\"]+|[\*\#\s'\"]+$", "", title).strip()
+        title = re.sub(r"^[*#\s'\"]+|[*#\s'\"]+$", "", title).strip()
 
-    # Extract Summary
-    summary_match = re.search(r"(?:Summary|SUMMARY):\s*(.*?)(?=\n(?:Key Points|KEY POINTS)|$)", clean_text, re.IGNORECASE | re.DOTALL)
+    # Extract Summary — everything between "Summary:" and "Key Points:"
+    summary_match = re.search(
+        r"(?:Summary|SUMMARY)\s*:\s*\n?(.*?)(?=\n\s*(?:Key\s*Points|KEY\s*POINTS|Key\s*Takeaways|KEY\s*TAKEAWAYS)\s*:|$)",
+        clean_text, re.IGNORECASE | re.DOTALL
+    )
     if summary_match:
         summary = summary_match.group(1).strip()
+        # Clean up any remaining markdown bold markers inside summary text
+        summary = re.sub(r"\*\*(.+?)\*\*", r"\1", summary)
 
     # Extract Key Points / Bullets
-    bullets_match = re.search(r"(?:Key Points|KEY POINTS):\s*(.*)", clean_text, re.IGNORECASE | re.DOTALL)
+    bullets_match = re.search(
+        r"(?:Key\s*Points|KEY\s*POINTS|Key\s*Takeaways|KEY\s*TAKEAWAYS)\s*:\s*\n?(.*)",
+        clean_text, re.IGNORECASE | re.DOTALL
+    )
     if bullets_match:
         raw_bullets = bullets_match.group(1).strip()
         for line in raw_bullets.split("\n"):
             line_clean = line.strip()
-            if line_clean.startswith(("-", "*", "•", "1.", "2.", "3.", "4.", "5.")):
-                item = re.sub(r"^[\-\*\•\d\.\s]+", "", line_clean).strip()
-                item = re.sub(r"^[\*\_]+|[\*\_]+$", "", item).strip()
-                # Filter out truncated single-word fragments (require at least 3 words)
-                if item and len(item.split()) >= 3:
-                    bullets.append(item)
+            if not line_clean:
+                continue
+            # Strip lead bullet symbols (dashes, asterisks, unicode symbols, numbers)
+            item = re.sub(r"^[-•*▪▸►◆●]+\s*", "", line_clean).strip()
+            item = re.sub(r"^\d+[.)]\s*", "", item).strip()
+            item = re.sub(r"^\*\*(.+?)\*\*:?\s*", r"\1: ", item).strip()
+            item = re.sub(r"^[*_]+|[*_]+$", "", item).strip()
+            if item and len(item.split()) >= 3:
+                bullets.append(item)
 
-    # Fallback heuristics if parsing didn't find specific headers
+    # Fallback: if no structured title found, use first non-empty line
     if not title:
         lines = [l.strip() for l in clean_text.split("\n") if l.strip()]
         if lines:
-            title = re.sub(r"^(?:Title|TITLE):?", "", lines[0], flags=re.IGNORECASE).strip("*'\"# ")
+            candidate = re.sub(r"^(?:Title|TITLE):?\s*", "", lines[0], flags=re.IGNORECASE).strip("*'\"# ")
+            if len(candidate.split()) <= 12:
+                title = candidate
 
+    # Fallback: if no structured summary found
     if not summary:
-        if "Summary:" in clean_text:
-            parts = clean_text.split("Summary:")
-            summary = parts[-1].strip()
-        else:
-            summary = clean_text
+        summary = clean_text
 
     return {
         "title": title or "Executive Summary",
@@ -96,13 +110,21 @@ def summarize_text(
     # Dynamically scale max_tokens based on requested target length
     effective_max_tokens = max_tokens
     if length == "50 words":
-        effective_max_tokens = min(max_tokens, 300)
-    elif length == "100 words":
         effective_max_tokens = max(max_tokens, 600)
+    elif length == "100 words":
+        effective_max_tokens = max(max_tokens, 900)
     elif length == "250 words":
-        effective_max_tokens = max(max_tokens, 1100)
+        effective_max_tokens = max(max_tokens, 1400)
     elif length == "Detailed":
-        effective_max_tokens = max(max_tokens, 1600)
+        effective_max_tokens = max(max_tokens, 2048)
+
+    # Truncate very long input to leave room for LLM output within context window.
+    # Gemma 4 E2B default context is 4096 tokens (~3000 words).
+    # We reserve ~1500 tokens for thinking + structured output.
+    MAX_INPUT_WORDS = 2000
+    words = text.split()
+    if len(words) > MAX_INPUT_WORDS:
+        text = " ".join(words[:MAX_INPUT_WORDS])
 
     prompt = quick_summary_prompt(text=text, length=length, fmt=fmt)
 

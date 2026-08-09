@@ -1,7 +1,27 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Server, Trash2, Sliders, ShieldCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ChevronRight,
+  Cpu,
+  LockKeyhole,
+  MemoryStick,
+  RotateCcw,
+  Settings2,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Trash2,
+  X,
+} from 'lucide-react'
 import VercelSelect from './VercelSelect'
+
+const DEFAULT_SETTINGS = {
+  temperature: 0.2,
+  maxTokens: 512,
+  systemPrompt: 'You are a precise, direct, and factual offline LLM assistant.',
+  autoUnload: false,
+}
 
 export default function VercelHeader({
   tabs,
@@ -13,150 +33,231 @@ export default function VercelHeader({
   health,
   settings,
   onSettingsChange,
-  onUnloadVRAM
+  onUnloadVRAM,
 }) {
   const [showSettings, setShowSettings] = useState(false)
   const isOnline = health?.status === 'online' || health?.status === 'CHALU HAI'
+  const modelOptions = models.length
+    ? models.map(model => ({ value: model.id, label: model.label || model.id }))
+    : [{ value: '', label: 'No local models detected', description: 'Start your local runtime to continue.' }]
+
+  useEffect(() => {
+    const handleEscape = event => {
+      if (event.key === 'Escape') setShowSettings(false)
+    }
+
+    if (showSettings) document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showSettings])
+
+  const updateSetting = (key, value) => {
+    onSettingsChange({ ...settings, [key]: value })
+  }
 
   return (
-    <header className="sticky top-0 z-50 bg-[var(--bg-header)] border-b border-[var(--border-subtle)] backdrop-blur-md">
-      {/* Top Header Bar */}
-      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-        {/* Vercel Logo & Breadcrumbs */}
-        <div className="flex items-center gap-3">
-          {/* Black Vercel Triangle Logo */}
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="18" height="16" viewBox="0 0 76 65" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="white" />
-            </svg>
+    <>
+      <header className="app-header sticky top-0 z-40">
+        <div className="app-header__chrome">
+          <div className="app-brand">
+            <div className="app-brand__mark" aria-hidden="true">
+              <span />
+              <span />
+            </div>
+            <div className="app-brand__copy">
+              <span className="app-brand__name">NETRAVAANI</span>
+              <span className="app-brand__subtitle">Private AI workstation</span>
+            </div>
           </div>
 
-          <div className="h-4 w-[1px] bg-[#222222]" />
+          <div className="app-header__actions">
+            <div className={`runtime-chip ${isOnline ? 'runtime-chip--online' : 'runtime-chip--checking'}`} title={isOnline ? 'Local runtime is ready' : 'Checking local runtime'}>
+              <i />
+              <span className="hidden sm:inline">{isOnline ? 'Local runtime ready' : 'Runtime checking'}</span>
+              <span className="sm:hidden">{isOnline ? 'Ready' : 'Checking'}</span>
+            </div>
 
-          {/* Org & App Breadcrumbs */}
-          <div className="flex items-center gap-2 text-xs font-medium text-white">
-            <span className="font-semibold text-white">NETRAVAANI</span>
-            <span className="text-[#444444]">/</span>
-            <span className="px-2 py-0.5 rounded bg-[#111111] border border-[#222222] text-[#888888] font-mono text-[0.7rem] flex items-center gap-1">
-              <ShieldCheck size={11} className="text-emerald-400" /> Air-Gapped Local
-            </span>
-          </div>
-        </div>
-
-        {/* Center Model Selector & Controls */}
-        <div className="flex items-center gap-3">
-          <div className="w-56">
-            <VercelSelect
-              options={models.map(m => ({ value: m.id, label: m.label || m.id }))}
-              value={selectedModel}
-              onChange={onModelChange}
-              icon={Server}
-            />
-          </div>
-
-          {/* Live Status Badge */}
-          <div className={`vercel-badge ${isOnline ? 'vercel-badge-emerald' : 'vercel-badge-rose'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-            <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
-          </div>
-
-          <button
-            onClick={onUnloadVRAM}
-            title="Flush GPU VRAM"
-            className="btn-vercel-secondary text-xs !py-1"
-          >
-            <Trash2 size={12} /> Flush VRAM
-          </button>
-
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`btn-vercel-secondary text-xs !py-1 ${showSettings ? 'border-white text-white' : ''}`}
-          >
-            <Sliders size={12} /> Controls
-          </button>
-        </div>
-      </div>
-
-      {/* Slide-Down Settings Drawer */}
-      {showSettings && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-b border-[#222222] bg-[#0a0a0a] p-6 grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto"
-        >
-          <div>
-            <label className="text-xs font-semibold text-[#888888] uppercase block mb-1 font-mono">
-              Temperature ({settings.temperature})
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={settings.temperature}
-              onChange={e => onSettingsChange({ ...settings, temperature: parseFloat(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-[#888888] uppercase block mb-1 font-mono">
-              Max Tokens ({settings.maxTokens})
-            </label>
-            <input
-              type="range"
-              min="128"
-              max="2048"
-              step="64"
-              value={settings.maxTokens}
-              onChange={e => onSettingsChange({ ...settings, maxTokens: parseInt(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="text-xs font-semibold text-[#888888] uppercase block mb-1 font-mono">
-              System Context Prompt
-            </label>
-            <input
-              type="text"
-              className="vercel-field text-xs"
-              value={settings.systemPrompt}
-              onChange={e => onSettingsChange({ ...settings, systemPrompt: e.target.value })}
-            />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Horizontal Sub-Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-6 flex gap-6 overflow-x-auto text-xs font-medium text-[#888888]">
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.id
-          const Icon = tab.icon
-
-          return (
             <button
-              key={tab.id}
-              onClick={() => onSelectTab(tab.id)}
-              className={`relative py-3 flex items-center gap-2 transition-colors ${
-                isActive ? 'text-white font-semibold' : 'hover:text-white'
-              }`}
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="control-trigger"
+              aria-expanded={showSettings}
+              aria-controls="workspace-controls"
             >
-              <Icon size={14} />
-              <span>{tab.label}</span>
-
-              {/* Sliding Active Underline */}
-              {isActive && (
-                <motion.div
-                  layoutId="vercelTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-white"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
+              <SlidersHorizontal size={16} />
+              <span className="hidden sm:inline">Controls</span>
             </button>
-          )
-        })}
-      </div>
-    </header>
+          </div>
+        </div>
+
+        <div className="app-header__nav-wrap">
+          <nav className="app-header__nav" aria-label="Workspace tools" role="tablist">
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.id
+              const Icon = tab.icon
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => onSelectTab(tab.id)}
+                  className={`app-nav-tab ${isActive ? 'app-nav-tab--active' : ''}`}
+                >
+                  <Icon size={15} strokeWidth={isActive ? 2.25 : 1.8} />
+                  <span>{tab.shortLabel || tab.label}</span>
+                  {isActive && <motion.i layoutId="activeWorkspaceTab" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
+                </button>
+              )
+            })}
+          </nav>
+        </div>
+      </header>
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showSettings && (
+            <>
+              <motion.button
+                type="button"
+                className="control-scrim"
+                aria-label="Close workspace controls"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSettings(false)}
+              />
+
+              <motion.aside
+                id="workspace-controls"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Workspace controls"
+                className="control-drawer"
+                initial={{ x: 40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 32, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+              >
+                <div className="control-drawer__header">
+                  <div>
+                    <span className="control-drawer__eyebrow"><Settings2 size={13} /> Workspace controls</span>
+                    <h2>Fine-tune your local run.</h2>
+                  </div>
+                  <button type="button" className="icon-control" onClick={() => setShowSettings(false)} aria-label="Close workspace controls">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="control-drawer__status">
+                  <div className={`control-drawer__status-icon ${isOnline ? 'is-online' : ''}`}>
+                    <Cpu size={17} />
+                  </div>
+                  <div>
+                    <span>{isOnline ? 'Secure runtime connected' : 'Local runtime unavailable'}</span>
+                    <small>{isOnline ? (health?.runtime || 'Local inference engine') : 'Your workspace remains private while it reconnects.'}</small>
+                  </div>
+                </div>
+
+                <div className="control-drawer__body">
+                  <section className="control-section">
+                    <div className="control-section__heading">
+                      <div>
+                        <span>Inference engine</span>
+                        <p>Choose the local model for this workspace.</p>
+                      </div>
+                      <Sparkles size={15} />
+                    </div>
+                    <VercelSelect
+                      options={modelOptions}
+                      value={selectedModel}
+                      onChange={onModelChange}
+                      icon={Cpu}
+                      disabled={!models.length}
+                      className="control-model-select"
+                    />
+                  </section>
+
+                  <section className="control-section">
+                    <div className="control-section__heading">
+                      <div>
+                        <span>Generation profile</span>
+                        <p>Balance precision, breadth, and response size.</p>
+                      </div>
+                      <SlidersHorizontal size={15} />
+                    </div>
+
+                    <label className="range-control">
+                      <span><b>Temperature</b><em>{settings.temperature.toFixed(2)}</em></span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={settings.temperature}
+                        onChange={event => updateSetting('temperature', parseFloat(event.target.value))}
+                      />
+                      <small>Focused <i /> Exploratory</small>
+                    </label>
+
+                    <label className="range-control">
+                      <span><b>Response budget</b><em>{settings.maxTokens} tokens</em></span>
+                      <input
+                        type="range"
+                        min="128"
+                        max="2048"
+                        step="64"
+                        value={settings.maxTokens}
+                        onChange={event => updateSetting('maxTokens', parseInt(event.target.value, 10))}
+                      />
+                      <small>Concise <i /> Detailed</small>
+                    </label>
+                  </section>
+
+                  <section className="control-section">
+                    <div className="control-section__heading">
+                      <div>
+                        <span>Safety & context</span>
+                        <p>Control memory use and system behavior.</p>
+                      </div>
+                      <LockKeyhole size={15} />
+                    </div>
+
+                    <label className="toggle-control">
+                      <input
+                        type="checkbox"
+                        checked={settings.autoUnload}
+                        onChange={event => updateSetting('autoUnload', event.target.checked)}
+                      />
+                      <span className="toggle-control__switch" aria-hidden="true"><i /></span>
+                      <span><b>Release VRAM after completion</b><small>Free local GPU memory when a task finishes.</small></span>
+                    </label>
+
+                    <label className="prompt-control">
+                      <span>System instruction</span>
+                      <textarea
+                        value={settings.systemPrompt}
+                        onChange={event => updateSetting('systemPrompt', event.target.value)}
+                        rows={4}
+                      />
+                    </label>
+                  </section>
+                </div>
+
+                <div className="control-drawer__footer">
+                  <button type="button" className="drawer-reset" onClick={() => onSettingsChange({ ...DEFAULT_SETTINGS })}>
+                    <RotateCcw size={14} /> Restore defaults
+                  </button>
+                  <button type="button" className="drawer-flush" onClick={onUnloadVRAM}>
+                    <Trash2 size={14} /> Flush VRAM <ChevronRight size={14} />
+                  </button>
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   )
 }

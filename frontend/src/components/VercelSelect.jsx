@@ -1,57 +1,79 @@
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Check } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Check, ChevronDown } from 'lucide-react'
 
-export default function VercelSelect({ options, value, onChange, placeholder = 'Select option...', className = '', icon: Icon }) {
+export default function VercelSelect({
+  options = [],
+  value,
+  onChange,
+  placeholder = 'Select an option',
+  className = '',
+  icon: Icon,
+  disabled = false,
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
-
-  const selectedOption = options.find(opt => opt.value === value) || options[0]
+  const listboxId = useId()
+  const selectedOption = options.find(option => option.value === value) || options[0]
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setIsOpen(false)
     }
+    const handleEscape = event => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
   }, [])
 
+  const toggleDropdown = () => {
+    if (!disabled) setIsOpen(open => !open)
+  }
+
   return (
-    <div className={`relative inline-block w-full ${className}`} ref={dropdownRef}>
-      {/* Trigger Button */}
+    <div className={`select-field ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-[#0a0a0a] hover:bg-[#111111] border border-[#222222] hover:border-[#444444] rounded-md px-3 py-2 text-xs font-mono font-medium text-white flex items-center justify-between transition-all duration-150 outline-none focus:border-white"
+        onClick={toggleDropdown}
+        className="select-field__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={listboxId}
+        disabled={disabled}
       >
-        <div className="flex items-center gap-2 truncate pr-2">
-          {Icon && <Icon size={14} className="text-[#888888] shrink-0" />}
-          {selectedOption?.icon && <selectedOption.icon size={14} className="text-blue-400 shrink-0" />}
+        <span className="select-field__value">
+          {Icon && <Icon size={15} className="select-field__icon" />}
+          {selectedOption?.icon && <selectedOption.icon size={15} className="select-field__icon" />}
           <span className="truncate">{selectedOption?.label || selectedOption?.value || placeholder}</span>
-        </div>
+        </span>
 
-        <motion.div
+        <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.15 }}
-          className="shrink-0 text-[#888888]"
+          transition={{ duration: 0.16 }}
+          className="select-field__chevron"
         >
-          <ChevronDown size={14} />
-        </motion.div>
+          <ChevronDown size={15} />
+        </motion.span>
       </button>
 
-      {/* Dropdown Menu Popup */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !disabled && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 4, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
-            className="absolute left-0 right-0 z-50 mt-1 bg-[#0a0a0a] border border-[#222222] rounded-md shadow-2xl overflow-hidden p-1 space-y-0.5 max-h-60 overflow-y-auto"
+            id={listboxId}
+            role="listbox"
+            initial={{ opacity: 0, y: -5, scale: 0.985 }}
+            animate={{ opacity: 1, y: 5, scale: 1 }}
+            exit={{ opacity: 0, y: -5, scale: 0.985 }}
+            transition={{ duration: 0.14, ease: 'easeOut' }}
+            className="select-field__menu"
           >
-            {options.map((option) => {
+            {options.map(option => {
               const isSelected = option.value === value
               const OptionIcon = option.icon
 
@@ -59,27 +81,22 @@ export default function VercelSelect({ options, value, onChange, placeholder = '
                 <button
                   key={option.value}
                   type="button"
+                  role="option"
+                  aria-selected={isSelected}
                   onClick={() => {
                     onChange(option.value)
                     setIsOpen(false)
                   }}
-                  className={`w-full text-left px-3 py-2 rounded text-xs font-mono flex items-center justify-between transition-colors ${
-                    isSelected
-                      ? 'bg-[#1a1a1a] text-white font-semibold'
-                      : 'text-[#888888] hover:bg-[#141414] hover:text-white'
-                  }`}
+                  className={`select-field__option ${isSelected ? 'is-selected' : ''}`}
                 >
-                  <div className="flex items-center gap-2 truncate pr-2">
-                    {OptionIcon && <OptionIcon size={13} className={isSelected ? 'text-white' : 'text-[#666666]'} />}
-                    <div className="truncate">
-                      <div className="truncate">{option.label || option.value}</div>
-                      {option.description && (
-                        <div className="text-[0.65rem] text-[#666666] font-normal truncate mt-0.5">{option.description}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {isSelected && <Check size={14} className="text-white shrink-0" />}
+                  <span className="select-field__option-copy">
+                    {OptionIcon && <OptionIcon size={14} />}
+                    <span className="truncate">
+                      <b>{option.label || option.value}</b>
+                      {option.description && <small>{option.description}</small>}
+                    </span>
+                  </span>
+                  {isSelected && <Check size={15} />}
                 </button>
               )
             })}

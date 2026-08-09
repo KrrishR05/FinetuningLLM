@@ -48,9 +48,10 @@ export default function Rewriter({ settings, selectedModel, presets }) {
   }
 
   const runPreset = (selectedPreset) => {
-    setText(SAMPLE_DRAFT_TEXT)
     setPreset(selectedPreset)
-    handleGenerate(selectedPreset, SAMPLE_DRAFT_TEXT)
+    if (text.trim()) {
+      handleGenerate(selectedPreset, text)
+    }
   }
 
   const copyResult = () => {
@@ -81,7 +82,7 @@ export default function Rewriter({ settings, selectedModel, presets }) {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-white tracking-tight">Fact-Lock Rewriter & Grammar Fixer</h2>
+        <h2 className="text-2xl font-bold gradient-heading tracking-tight">Fact-Lock Rewriter & Grammar Fixer</h2>
         <p className="text-xs text-[#888888] mt-1 font-mono">
           Contextual grammar correction and tone reformatting with zero-hallucination fact lock verification.
         </p>

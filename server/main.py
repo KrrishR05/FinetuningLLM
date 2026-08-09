@@ -60,7 +60,7 @@ class SummarizeRequest(BaseModel):
     length: str = "100 words"
     fmt: str = "bullets"
     temperature: float = 0.2
-    max_tokens: int = 512
+    max_tokens: int = 1024
     system_prompt: Optional[str] = None
     auto_unload: bool = False
 

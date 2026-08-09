@@ -79,10 +79,11 @@ export default function Summarizer({ settings, selectedModel }) {
   }
 
   const runPreset = (length, format) => {
-    setText(SAMPLE_TEXT)
     setTargetLength(length)
     setOutputFormat(format)
-    handleSummarize(length, format, SAMPLE_TEXT)
+    if (text.trim()) {
+      handleSummarize(length, format, text)
+    }
   }
 
   const copyResult = () => {
@@ -114,7 +115,7 @@ export default function Summarizer({ settings, selectedModel }) {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h2 className="text-xl font-semibold text-white tracking-tight">AI/ML Intelligence Summarizer</h2>
+        <h2 className="text-2xl font-bold gradient-heading tracking-tight">AI/ML Intelligence Summarizer</h2>
         <p className="text-xs text-[#888888] mt-1 font-mono">
           Single-Pane LLM Summarizer with instant one-click presets and rich output workbench.
         </p>

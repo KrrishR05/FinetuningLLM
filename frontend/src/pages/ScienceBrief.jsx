@@ -76,8 +76,13 @@ export default function ScienceBrief({ settings, selectedModel }) {
   }
 
   const runPreset = (sampleText) => {
-    setText(sampleText)
-    handleGenerate(sampleText)
+    // Presets just demonstrate functionality, but let's not inject if they click it without text
+    if (!text.trim()) {
+      setText(sampleText)
+      handleGenerate(sampleText)
+    } else {
+      handleGenerate(text)
+    }
   }
 
   const copyResult = () => {
@@ -118,7 +123,7 @@ export default function ScienceBrief({ settings, selectedModel }) {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-white tracking-tight">S&T Research Paper Brief</h2>
+        <h2 className="text-2xl font-bold gradient-heading tracking-tight">S&T Research Paper Brief</h2>
         <p className="text-xs text-[#888888] mt-1 font-mono">
           Map-Reduce structural analysis for scientific publications, technical papers, and engineering reports.
         </p>

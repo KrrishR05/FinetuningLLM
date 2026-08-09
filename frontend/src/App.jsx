@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, Microscope, Newspaper, PenLine } from 'lucide-react'
+import { Zap, Microscope, Newspaper, PenLine, ShieldCheck, Cpu, Activity, Lock, CircleDot } from 'lucide-react'
 import VercelHeader from './components/VercelHeader'
 import VercelMetrics from './components/VercelMetrics'
+import DashboardHero from './components/DashboardHero'
 import Summarizer from './pages/Summarizer'
 import ScienceBrief from './pages/ScienceBrief'
 import NewsDigest from './pages/NewsDigest'
@@ -64,24 +65,31 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)] text-white flex flex-col font-sans">
+    <div className="app-shell min-h-screen text-white flex flex-col font-sans relative selection:bg-white selection:text-[#07110f]">
+      <div className="app-shell__noise pointer-events-none" />
+      <div className="app-shell__grid pointer-events-none" />
+
       {/* Vercel Header with Sub-Tabs */}
-      <VercelHeader
-        tabs={TABS}
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        models={models}
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
-        health={health}
-        settings={settings}
-        onSettingsChange={setSettings}
-        onUnloadVRAM={handleUnloadVRAM}
-      />
+      <div className="relative z-10">
+        <VercelHeader
+          tabs={TABS}
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          models={models}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          health={health}
+          settings={settings}
+          onSettingsChange={setSettings}
+          onUnloadVRAM={handleUnloadVRAM}
+        />
+      </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8">
-        {/* Vercel Deployment Metrics */}
+      <main className="relative z-10 flex-1 max-w-[1440px] w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6 lg:space-y-7">
+        <DashboardHero activeTab={activeTab} selectedModel={selectedModel} health={health} />
+
+        {/* Compact system pulse keeps platform state visible without taking over the workspace. */}
         <VercelMetrics health={health} selectedModel={selectedModel} />
 
         {/* Tab Page Transitions */}
@@ -93,21 +101,38 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
-            {activeTab === 'summarizer' && (
-              <Summarizer settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'science' && (
-              <ScienceBrief settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'news' && (
-              <NewsDigest settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'rewriter' && (
-              <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
-            )}
+            <div className="tool-workspace">
+              {activeTab === 'summarizer' && (
+                <Summarizer settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'science' && (
+                <ScienceBrief settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'news' && (
+                <NewsDigest settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'rewriter' && (
+                <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Enterprise Bottom Telemetry Footer Bar */}
+      <footer className="app-footer relative z-10">
+        <div className="app-footer__inner">
+          <div className="app-footer__trust">
+            <span><ShieldCheck size={14} /> Air-gapped hardened</span>
+            <span><Lock size={13} /> Your data stays on this device</span>
+          </div>
+
+          <div className="app-footer__runtime">
+            <span><Cpu size={13} /> Local CUDA runtime</span>
+            <span><CircleDot size={13} className="app-footer__status" /> REST API :8000</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
