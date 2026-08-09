@@ -2,7 +2,11 @@ import os
 import streamlit as st
 from modules.model_adapter import ModelAdapter
 from modules.summarizer import summarize_text
-from modules.extractor import extract
+from modules.extractor import extract, extraction_summary
+from modules.science_brief import generate_science_brief
+from modules.news_digest import generate_news_digest, parse_news_csv, articles_to_text
+from modules.rewriter import rewrite_text, PRESETS
+from modules.validators import check_fact_preservation
 
 # ---------------------------------------------------------
 # Page Config & Custom Design System (CSS)
@@ -308,17 +312,17 @@ with tab1:
                 with st.spinner("Extracting text from document..."):
                     result = extract(file=file_bytes, filename=doc_filename)
                 
-                if result.error:
-                    st.error(f"❌ Extraction error: {result.error}")
+                if result.warnings and not result.full_text.strip():
+                    st.error(f"Extraction error: {result.warnings[0]}")
                 else:
-                    extracted_text = result.text
-                    doc_page_count = result.page_count
+                    extracted_text = result.full_text
+                    doc_page_count = result.metadata.get("num_pages", 0)
                     word_count = len(extracted_text.split())
                     
                     st.success(
-                        f"📄 **Extracted successfully:** `{doc_filename}` ({doc_page_count} pages, {word_count:,} words)"
+                        f"Extracted successfully: `{doc_filename}` ({doc_page_count} pages, {word_count:,} words)"
                     )
-                    with st.expander("👁️ View Extracted Document Preview"):
+                    with st.expander("View Extracted Document Preview"):
                         st.text(extracted_text[:1500] + ("..." if len(extracted_text) > 1500 else ""))
 
     with col_config:
@@ -425,22 +429,378 @@ with tab1:
                 st.error(f"❌ Summarization failed: {res.get('error')}")
 
 # =========================================================
-# TAB 2: S&T Document Brief (P0 - Placeholder preview)
+# TAB 2: S&T Document Brief (P0)
 # =========================================================
 with tab2:
-    st.markdown("### 🔬 Science & Technology Document Brief")
-    st.info("🚧 **Tab 2 Workspace Ready:** S&T Map-Reduce pipeline for research PDFs/DOCX with page-aware citations will be active next.")
+    st.markdown("### S&T Document Research Brief")
+    st.markdown("Upload a scientific/technical PDF or DOCX to generate a structured research brief with page citations.")
+
+    st2_col_input, st2_col_config = st.columns([2, 1])
+
+    with st2_col_input:
+        st2_input_mode = st.radio(
+            "Input Source",
+            ["Upload S&T Document (.pdf, .docx, .txt)", "Paste Raw Text"],
+            horizontal=True,
+            key="st2_input_mode",
+        )
+
+        st2_text = ""
+        st2_pages = []
+
+        if st2_input_mode == "Paste Raw Text":
+            st2_text = st.text_area(
+                "Paste S&T Text Here",
+                height=220,
+                placeholder="Paste the research paper or technical report text...",
+                key="st2_textarea",
+            )
+            if st2_text.strip():
+                from modules.models import PageContent
+                st2_pages = [PageContent(page_number=1, text=st2_text, source_label="Pasted Text")]
+                st.caption(f"Input: {len(st2_text.split()):,} words | {len(st2_text):,} characters")
+        else:
+            st2_file = st.file_uploader(
+                "Upload S&T Document",
+                type=["pdf", "docx", "txt", "md"],
+                help="Supports PDF, DOCX, TXT, and Markdown files.",
+                key="st2_uploader",
+            )
+            if st2_file is not None:
+                st2_bytes = st2_file.read()
+                with st.spinner("Extracting document text..."):
+                    st2_result = extract(file=st2_bytes, filename=st2_file.name)
+
+                if st2_result.warnings and not st2_result.full_text.strip():
+                    st.error(f"Extraction error: {st2_result.warnings[0]}")
+                else:
+                    st2_pages = st2_result.pages
+                    st2_text = st2_result.full_text
+                    st2_meta = st2_result.metadata
+                    st.success(
+                        f"Extracted: `{st2_file.name}` ({st2_meta.get('num_pages', 0)} pages, "
+                        f"{st2_meta.get('word_count', 0):,} words, {st2_meta.get('num_sections', 0)} sections)"
+                    )
+                    with st.expander("View Extracted Preview"):
+                        st.text(st2_text[:1500] + ("..." if len(st2_text) > 1500 else ""))
+
+    with st2_col_config:
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='glass-card-header'>Brief Settings</div>", unsafe_allow_html=True)
+        st2_chunk_size = st.slider("Chunk Size (chars)", 1500, 5000, 3000, 500, key="st2_chunk")
+        st2_generate = st.button("Generate S&T Brief", use_container_width=True, type="primary", key="st2_btn")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    if st2_generate:
+        if not st2_pages:
+            st.warning("Please upload a document or paste text first.")
+        else:
+            st.markdown("---")
+            with st.spinner("Generating structured S&T brief (map-reduce)..."):
+                st2_res = generate_science_brief(
+                    pages=st2_pages,
+                    adapter=adapter,
+                    model_id=selected_model_id,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    system_prompt=system_prompt if system_prompt.strip() else None,
+                    keep_alive=0 if auto_unload_vram else None,
+                    max_chunk_chars=st2_chunk_size,
+                )
+
+            if st2_res.get("status") == "success":
+                brief = st2_res["brief"]
+                st.markdown("### Structured Research Brief")
+
+                for field_name in ["Title", "Authors", "Source/Published", "Objective",
+                                   "Method", "Key Findings", "Important Values/Dates",
+                                   "Limitations", "Implications", "Keywords", "Source Pages"]:
+                    value = brief.get(field_name, "Not stated in source.")
+                    st.markdown(
+                        f"<div style='background: rgba(17,24,39,0.85); border-left: 4px solid #60a5fa; "
+                        f"border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;'>"
+                        f"<span style='font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; "
+                        f"color:#60a5fa; font-weight:600;'>{field_name}</span>"
+                        f"<div style='color:#e5e7eb; margin-top:4px;'>{value}</div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+                col_b1, col_b2 = st.columns([1, 1])
+                with col_b1:
+                    export_lines = [f"{k}: {v}" for k, v in brief.items()]
+                    st.download_button(
+                        label="Download Brief (.txt)",
+                        data="\n\n".join(export_lines),
+                        file_name="st_research_brief.txt",
+                        mime="text/plain",
+                        key="st2_download",
+                    )
+                with col_b2:
+                    st.markdown(
+                        f"<div style='text-align:right; font-size:0.85rem; color:#9ca3af;'>"
+                        f"Latency: <code>{st2_res.get('latency_seconds')}s</code> | "
+                        f"Chunks: <code>{st2_res.get('num_chunks', 1)}</code></div>",
+                        unsafe_allow_html=True,
+                    )
+            else:
+                st.error(f"S&T Brief generation failed: {st2_res.get('error')}")
 
 # =========================================================
-# TAB 3: News Digest & Fact/Opinion (P0 - Placeholder preview)
+# TAB 3: News Digest & Fact/Opinion (P0)
 # =========================================================
 with tab3:
-    st.markdown("### 📰 News Digest & Fact/Opinion Separator")
-    st.info("🚧 **Tab 3 Workspace Ready:** Topic-wise headline overview & strict fact vs. editorial viewpoint separator will be active next.")
+    st.markdown("### News Digest & Fact/Opinion Separator")
+    st.markdown("Upload news headlines/editorials or paste text to get a topic-wise overview with strict fact vs. opinion separation.")
+
+    st3_col_input, st3_col_config = st.columns([2, 1])
+
+    with st3_col_input:
+        st3_input_mode = st.radio(
+            "Input Source",
+            ["Paste Raw Text", "Paste CSV (source,date,type,headline,body)"],
+            horizontal=True,
+            key="st3_input_mode",
+        )
+
+        st3_text = ""
+        if st3_input_mode == "Paste Raw Text":
+            st3_text = st.text_area(
+                "Paste News Headlines / Articles",
+                height=220,
+                placeholder="Paste news headlines, articles, or editorials here...",
+                key="st3_textarea",
+            )
+        else:
+            st3_csv_raw = st.text_area(
+                "Paste CSV Data",
+                height=220,
+                placeholder="source,date,type,headline,body\nTimes of India,2024-01-15,news,ISRO Launches PSLV,Details here...",
+                key="st3_csv",
+            )
+            if st3_csv_raw.strip():
+                articles = parse_news_csv(st3_csv_raw)
+                if articles:
+                    st3_text = articles_to_text(articles)
+                    st.caption(f"Parsed {len(articles)} articles from CSV")
+                else:
+                    st.warning("Could not parse CSV. Check column headers: source, date, type, headline, body")
+
+    with st3_col_config:
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='glass-card-header'>Digest Settings</div>", unsafe_allow_html=True)
+        st3_topic = st.text_input("Topic Filter (optional)", value="", placeholder="e.g. Space, Defence, AI", key="st3_topic")
+        st3_generate = st.button("Generate News Digest", use_container_width=True, type="primary", key="st3_btn")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    if st3_generate:
+        if not st3_text or not st3_text.strip():
+            st.warning("Please paste news text or CSV data first.")
+        else:
+            st.markdown("---")
+            with st.spinner("Analyzing news for fact/opinion separation..."):
+                st3_res = generate_news_digest(
+                    text=st3_text,
+                    adapter=adapter,
+                    topic=st3_topic,
+                    model_id=selected_model_id,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    system_prompt=system_prompt if system_prompt.strip() else None,
+                    keep_alive=0 if auto_unload_vram else None,
+                )
+
+            if st3_res.get("status") == "success":
+                digest = st3_res["digest"]
+
+                # Topic Header
+                st.markdown(
+                    f"<div style='background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.4); "
+                    f"padding: 12px 18px; border-radius: 10px; margin-bottom: 16px;'>"
+                    f"<span style='font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; "
+                    f"color:#60a5fa; font-weight:600;'>Topic</span>"
+                    f"<div style='font-size:1.25rem; font-weight:700; color:#fff; margin-top:2px;'>"
+                    f"{digest.get('topic', 'General')}</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+                # Facts
+                if digest.get("facts"):
+                    st.markdown("#### Verified Facts")
+                    for fact in digest["facts"]:
+                        st.markdown(
+                            f"<div class='bullet-item'><span style='color:#34d399;'>FACT</span>"
+                            f"<div>{fact}</div></div>",
+                            unsafe_allow_html=True,
+                        )
+
+                # Opinions
+                if digest.get("opinions"):
+                    st.markdown("#### Editorial Opinions")
+                    for opinion in digest["opinions"]:
+                        st.markdown(
+                            f"<div class='bullet-item'><span style='color:#f59e0b;'>OPINION</span>"
+                            f"<div>{opinion}</div></div>",
+                            unsafe_allow_html=True,
+                        )
+
+                # Summary
+                if digest.get("summary"):
+                    st.markdown("#### Overall Summary")
+                    st.markdown(f"<div class='summary-box'>{digest['summary']}</div>", unsafe_allow_html=True)
+
+                col_n1, col_n2 = st.columns([1, 1])
+                with col_n1:
+                    export = f"Topic: {digest.get('topic', '')}\n\nFacts:\n"
+                    export += "\n".join(f"- {f}" for f in digest.get('facts', []))
+                    export += "\n\nOpinions:\n"
+                    export += "\n".join(f"- {o}" for o in digest.get('opinions', []))
+                    export += f"\n\nSummary: {digest.get('summary', '')}"
+                    st.download_button(
+                        label="Download Digest (.txt)",
+                        data=export,
+                        file_name="news_digest.txt",
+                        mime="text/plain",
+                        key="st3_download",
+                    )
+                with col_n2:
+                    st.markdown(
+                        f"<div style='text-align:right; font-size:0.85rem; color:#9ca3af;'>"
+                        f"Latency: <code>{st3_res.get('latency_seconds')}s</code> | "
+                        f"Model: <code>{st3_res.get('model_name', '')}</code></div>",
+                        unsafe_allow_html=True,
+                    )
+            else:
+                st.error(f"News digest failed: {st3_res.get('error')}")
 
 # =========================================================
-# TAB 4: Rewrite & Grammar (P0 - Placeholder preview)
+# TAB 4: Rewrite & Grammar (P0)
 # =========================================================
 with tab4:
-    st.markdown("### ✍️ Reformatting & Contextual Grammar Fixer")
-    st.info("🚧 **Tab 4 Workspace Ready:** Grammar rewrite presets with locked facts protection and side-by-side diff view will be active next.")
+    st.markdown("### Reformatting & Contextual Grammar Fixer")
+    st.markdown("Paste text to fix grammar and reformat with fact-lock protection. All facts are verified after rewriting.")
+
+    st4_col_input, st4_col_config = st.columns([2, 1])
+
+    with st4_col_input:
+        st4_text = st.text_area(
+            "Paste Text for Rewriting",
+            height=220,
+            placeholder="Paste the rough draft, report text, or email you want to fix...",
+            key="st4_textarea",
+        )
+        if st4_text.strip():
+            st.caption(f"Input: {len(st4_text.split()):,} words | {len(st4_text):,} characters")
+
+    with st4_col_config:
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='glass-card-header'>Rewrite Settings</div>", unsafe_allow_html=True)
+        st4_preset = st.selectbox(
+            "Style Preset",
+            options=list(PRESETS.keys()),
+            format_func=lambda x: PRESETS[x],
+            index=1,
+            key="st4_preset",
+        )
+        st4_generate = st.button("Rewrite Text", use_container_width=True, type="primary", key="st4_btn")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    if st4_generate:
+        if not st4_text or not st4_text.strip():
+            st.warning("Please paste text to rewrite first.")
+        else:
+            st.markdown("---")
+            with st.spinner(f"Rewriting with '{PRESETS.get(st4_preset, st4_preset)}' preset + fact-lock check..."):
+                st4_res = rewrite_text(
+                    text=st4_text,
+                    adapter=adapter,
+                    preset=st4_preset,
+                    model_id=selected_model_id,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    system_prompt=system_prompt if system_prompt.strip() else None,
+                    keep_alive=0 if auto_unload_vram else None,
+                )
+
+            if st4_res.get("status") == "success":
+                # Side-by-side comparison
+                st.markdown("### Original vs. Rewritten")
+                col_orig, col_new = st.columns(2)
+                with col_orig:
+                    st.markdown("**Original**")
+                    st.markdown(
+                        f"<div style='background:rgba(17,24,39,0.85); border-left:4px solid #6b7280; "
+                        f"border-radius:8px; padding:14px 18px; color:#d1d5db; font-size:0.95rem; "
+                        f"line-height:1.6;'>{st4_res['original']}</div>",
+                        unsafe_allow_html=True,
+                    )
+                with col_new:
+                    st.markdown("**Rewritten**")
+                    st.markdown(
+                        f"<div style='background:rgba(17,24,39,0.85); border-left:4px solid #34d399; "
+                        f"border-radius:8px; padding:14px 18px; color:#e5e7eb; font-size:0.95rem; "
+                        f"line-height:1.6;'>{st4_res['rewritten']}</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                # Fact-Lock Report
+                fact_check = st4_res.get("fact_check", {})
+                score = fact_check.get("score", 0)
+                if fact_check.get("passed"):
+                    st.markdown(
+                        f"<div style='background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); "
+                        f"padding:10px 16px; border-radius:8px; color:#34d399; font-weight:600;'>"
+                        f"Fact-Lock Check PASSED - All {fact_check.get('total_facts', 0)} facts preserved "
+                        f"(score: {score})</div>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f"<div style='background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); "
+                        f"padding:10px 16px; border-radius:8px; color:#f87171; font-weight:600;'>"
+                        f"Fact-Lock WARNING - {fact_check.get('missing_count', 0)} of "
+                        f"{fact_check.get('total_facts', 0)} facts may have changed (score: {score})</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                # Warnings
+                if st4_res.get("warnings"):
+                    with st.expander(f"Fact-Lock Warnings ({len(st4_res['warnings'])})" ):
+                        for w in st4_res["warnings"]:
+                            st.markdown(f"- {w}")
+
+                # Changes list
+                if st4_res.get("changes"):
+                    with st.expander("Changes Made"):
+                        for c in st4_res["changes"]:
+                            st.markdown(f"- {c}")
+
+                # Diff view
+                if st4_res.get("diff"):
+                    with st.expander("Unified Diff"):
+                        diff_text = "\n".join(st4_res["diff"])
+                        st.code(diff_text, language="diff")
+
+                # Metadata and download
+                col_r1, col_r2 = st.columns([1, 1])
+                with col_r1:
+                    export = f"PRESET: {st4_res.get('preset', '')}\n\n"
+                    export += f"ORIGINAL:\n{st4_res['original']}\n\n"
+                    export += f"REWRITTEN:\n{st4_res['rewritten']}\n\n"
+                    if st4_res.get('changes'):
+                        export += "CHANGES:\n" + "\n".join(f"- {c}" for c in st4_res['changes'])
+                    st.download_button(
+                        label="Download Rewrite (.txt)",
+                        data=export,
+                        file_name="rewritten_text.txt",
+                        mime="text/plain",
+                        key="st4_download",
+                    )
+                with col_r2:
+                    st.markdown(
+                        f"<div style='text-align:right; font-size:0.85rem; color:#9ca3af;'>"
+                        f"Latency: <code>{st4_res.get('latency_seconds')}s</code> | "
+                        f"Model: <code>{st4_res.get('model_name', '')}</code></div>",
+                        unsafe_allow_html=True,
+                    )
+            else:
+                st.error(f"Rewrite failed: {st4_res.get('error')}")

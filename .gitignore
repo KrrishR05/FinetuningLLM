@@ -20,6 +20,8 @@ Thumbs.db
 # Test files
 test_extractor.py
 test_llm_integration.py
+test_prompts_live.py
+test_modules.py
 
 # Extra files
 sprint_run.md
