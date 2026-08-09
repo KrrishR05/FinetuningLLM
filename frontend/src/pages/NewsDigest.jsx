@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Newspaper, FileText, Table, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap } from 'lucide-react'
+import { Newspaper, FileText, Table, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap, CheckCircle2, MessageSquare } from 'lucide-react'
 
 const SAMPLE_NEWS_TEXT = `NEW DELHI — India's Space Research Organisation (ISRO) successfully launched the PSLV-C60 mission today from Sriharikota, deploying two climate monitoring satellites into a 520km polar sun-synchronous orbit. Mission telemetry confirmed orbital injection at 09:14 AM IST. 
 
@@ -217,30 +217,36 @@ export default function NewsDigest({ settings, selectedModel }) {
         </div>
       </div>
 
-      {/* Output */}
+      {/* Dual Column Claim Matrix Output Inspector */}
       <AnimatePresence>
         {result?.digest && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vercel-card p-6 space-y-4 border-white/20"
+            className="vercel-card p-6 space-y-5 border-white/20"
           >
-            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
-              <span className="vercel-badge vercel-badge-neutral">NEWS MATRIX OUTPUT</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1f1f1f] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="vercel-badge vercel-badge-emerald font-mono">MATRIX ANALYZED</span>
+                  <span className="text-xs font-mono text-[#666666]">• Topic: {result.digest.topic || 'General'}</span>
+                </div>
+                <h3 className="text-base font-semibold text-white font-mono">Fact vs. Opinion Dissection Report</h3>
+              </div>
 
               <div className="flex items-center gap-2">
                 <div className="flex bg-[#000000] p-0.5 rounded border border-[#222222] text-xs">
                   <button
                     onClick={() => setViewTab('rendered')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'rendered' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Eye size={12} className="inline mr-1" /> Matrix
+                    <Eye size={12} className="inline mr-1" /> Dual Matrix
                   </button>
                   <button
                     onClick={() => setViewTab('json')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'json' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
@@ -258,33 +264,53 @@ export default function NewsDigest({ settings, selectedModel }) {
             </div>
 
             {viewTab === 'rendered' ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
+                {/* Dual Matrix Columns */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Facts */}
-                  <div className="space-y-2">
-                    <span className="vercel-badge vercel-badge-emerald">VERIFIED FACTS ({result.digest.facts?.length || 0})</span>
-                    {result.digest.facts?.map((fact, idx) => (
-                      <div key={idx} className="p-2.5 bg-[#000000] border border-[#1f1f1f] rounded text-xs text-[#dddddd]">
-                        {fact}
-                      </div>
-                    ))}
+                  {/* Verified Facts Column */}
+                  <div className="p-4 bg-[#000000] border border-[#1f1f1f] rounded-md space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-2">
+                      <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 size={14} /> VERIFIED FACTS ({result.digest.facts?.length || 0})
+                      </span>
+                      <span className="text-[0.65rem] font-mono text-[#666666]">EMPIRICAL</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {result.digest.facts?.map((fact, idx) => (
+                        <div key={idx} className="p-2.5 bg-[#0a0a0a] border border-[#1f1f1f] rounded text-xs text-[#dddddd] leading-relaxed">
+                          {fact}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Opinions */}
-                  <div className="space-y-2">
-                    <span className="vercel-badge vercel-badge-neutral">EDITORIAL OPINIONS ({result.digest.opinions?.length || 0})</span>
-                    {result.digest.opinions?.map((opinion, idx) => (
-                      <div key={idx} className="p-2.5 bg-[#000000] border border-[#1f1f1f] rounded text-xs text-[#dddddd]">
-                        {opinion}
-                      </div>
-                    ))}
+                  {/* Editorial Opinions Column */}
+                  <div className="p-4 bg-[#000000] border border-[#1f1f1f] rounded-md space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-2">
+                      <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1.5">
+                        <MessageSquare size={14} /> EDITORIAL OPINIONS ({result.digest.opinions?.length || 0})
+                      </span>
+                      <span className="text-[0.65rem] font-mono text-[#666666]">COMMENTARY</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {result.digest.opinions?.map((opinion, idx) => (
+                        <div key={idx} className="p-2.5 bg-[#0a0a0a] border border-[#1f1f1f] rounded text-xs text-[#dddddd] leading-relaxed">
+                          {opinion}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
+                {/* Synthesis Block */}
                 {result.digest.summary && (
-                  <div className="p-3 bg-[#000000] border-l-2 border-white rounded text-xs text-[#cccccc]">
-                    <span className="text-[0.65rem] font-mono text-[#888888] block mb-0.5">SYNTHESIS</span>
-                    {result.digest.summary}
+                  <div className="p-4 bg-[#000000] border-l-4 border-white rounded-r-md">
+                    <span className="text-[0.65rem] font-mono font-bold text-[#888888] uppercase block mb-1">
+                      Synthesis Summary
+                    </span>
+                    <p className="text-xs text-[#cccccc] leading-relaxed">{result.digest.summary}</p>
                   </div>
                 )}
               </div>
@@ -294,7 +320,7 @@ export default function NewsDigest({ settings, selectedModel }) {
 
             <div className="flex items-center justify-between pt-3 border-t border-[#1f1f1f] text-[0.7rem] font-mono text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} /> Latency: {result.latency_seconds}s
+                <Clock size={12} /> Execution Latency: {result.latency_seconds}s
               </span>
               <span>Model: {result.model_name}</span>
             </div>

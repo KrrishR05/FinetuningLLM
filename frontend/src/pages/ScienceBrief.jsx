@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Microscope, FileText, UploadCloud, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap } from 'lucide-react'
+import { Microscope, FileText, UploadCloud, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap, Target, Cpu, AlertTriangle, Lightbulb, Bookmark } from 'lucide-react'
 
 const SAMPLE_SCIENCE_TEXT = `TITLE: Quantum Phase Transitions in Superconducting Qubits
 AUTHORS: Dr. A. Sharma, Prof. R. Patel (IISc Bangalore, 2026)
@@ -104,11 +104,15 @@ export default function ScienceBrief({ settings, selectedModel }) {
     URL.revokeObjectURL(url)
   }
 
-  const fields = [
-    'Title', 'Authors', 'Source/Published', 'Objective',
-    'Method', 'Key Findings', 'Important Values/Dates',
-    'Limitations', 'Implications', 'Keywords', 'Source Pages'
-  ]
+  const getIconForField = (field) => {
+    const name = field.toLowerCase()
+    if (name.includes('objective')) return <Target size={14} className="text-blue-400" />
+    if (name.includes('method')) return <Cpu size={14} className="text-purple-400" />
+    if (name.includes('finding')) return <Sparkles size={14} className="text-emerald-400" />
+    if (name.includes('limitation')) return <AlertTriangle size={14} className="text-amber-400" />
+    if (name.includes('implication')) return <Lightbulb size={14} className="text-cyan-400" />
+    return <Bookmark size={14} className="text-slate-400" />
+  }
 
   return (
     <div className="space-y-8">
@@ -253,7 +257,7 @@ export default function ScienceBrief({ settings, selectedModel }) {
             >
               {loading ? (
                 <>
-                  <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Synthesizing Map-Reduce...
+                  <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Synthesizing Brief...
                 </>
               ) : (
                 <>
@@ -265,30 +269,36 @@ export default function ScienceBrief({ settings, selectedModel }) {
         </div>
       </div>
 
-      {/* Output */}
+      {/* Rich Categorized Output Inspector */}
       <AnimatePresence>
         {result?.brief && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vercel-card p-6 space-y-4 border-white/20"
+            className="vercel-card p-6 space-y-5 border-white/20"
           >
-            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
-              <span className="vercel-badge vercel-badge-neutral">S&T BRIEF OUTPUT</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1f1f1f] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="vercel-badge vercel-badge-emerald font-mono">S&T BRIEF COMPLETE</span>
+                  <span className="text-xs font-mono text-[#666666]">• {result.latency_seconds}s</span>
+                </div>
+                <h3 className="text-base font-semibold text-white font-mono">{result.brief.Title || 'Scientific Report'}</h3>
+              </div>
 
               <div className="flex items-center gap-2">
                 <div className="flex bg-[#000000] p-0.5 rounded border border-[#222222] text-xs">
                   <button
                     onClick={() => setViewTab('rendered')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'rendered' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Eye size={12} className="inline mr-1" /> Cards
+                    <Eye size={12} className="inline mr-1" /> Visual Cards
                   </button>
                   <button
                     onClick={() => setViewTab('json')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'json' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
@@ -306,16 +316,18 @@ export default function ScienceBrief({ settings, selectedModel }) {
             </div>
 
             {viewTab === 'rendered' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {fields.map(field => {
-                  const val = result.brief[field]
-                  if (!val) return null
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(result.brief).map(([field, val]) => {
+                  if (!val || field === 'Title') return null
                   return (
-                    <div key={field} className="p-3 bg-[#000000] border border-[#1f1f1f] rounded space-y-1">
-                      <span className="text-[0.65rem] font-mono font-bold text-[#888888] uppercase block">
-                        {field}
-                      </span>
-                      <p className="text-xs text-[#dddddd] leading-relaxed">{val}</p>
+                    <div key={field} className="p-4 bg-[#000000] border border-[#1f1f1f] rounded-md space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        {getIconForField(field)}
+                        <span className="text-[0.68rem] font-mono font-bold text-white uppercase tracking-wider">
+                          {field}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#cccccc] leading-relaxed pl-5">{val}</p>
                     </div>
                   )
                 })}
@@ -326,7 +338,7 @@ export default function ScienceBrief({ settings, selectedModel }) {
 
             <div className="flex items-center justify-between pt-3 border-t border-[#1f1f1f] text-[0.7rem] font-mono text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} /> Latency: {result.latency_seconds}s
+                <Clock size={12} /> Execution Latency: {result.latency_seconds}s
               </span>
               <span>Chunks Processed: {result.num_chunks || 1}</span>
             </div>

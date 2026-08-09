@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, FileText, UploadCloud, Download, CheckCircle, Clock, Cpu, ArrowRight, Copy, Trash, FileCode, Eye, Code, Terminal, Zap } from 'lucide-react'
+import { Sparkles, FileText, UploadCloud, Download, CheckCircle, Clock, Cpu, ArrowRight, Copy, Trash, FileCode, Eye, Code, Terminal, Zap, Layers } from 'lucide-react'
 
 const SAMPLE_TEXT = `Learning is a lifelong journey that shapes the mind and expands our understanding of the world. Every single day gives us new chances to gain knowledge, build skills, and experience growth through curiosity. While challenges may appear, persistence helps us overcome obstacles and find fresh perspectives. As individuals develop, they also learn vital lessons about empathy, responsibility, and cooperation. Ultimately, this ongoing process enriches our daily lives, unlocks hidden potential, and opens doors to a future filled with bright new possibilities, achievements, and meaningful connections with everyone around us.`
 
@@ -115,16 +115,13 @@ export default function Summarizer({ settings, selectedModel }) {
       <div>
         <h2 className="text-xl font-semibold text-white tracking-tight">AI/ML Intelligence Summarizer</h2>
         <p className="text-xs text-[#888888] mt-1 font-mono">
-          Vercel-Grade Single-Pane LLM Summarizer with instant one-click presets.
+          Single-Pane LLM Summarizer with instant one-click presets and rich output workbench.
         </p>
       </div>
 
       {/* Vercel Easy Preset Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          onClick={() => runPreset('100 words', 'bullets')}
-          className="vercel-preset-card group"
-        >
+        <button onClick={() => runPreset('100 words', 'bullets')} className="vercel-preset-card group">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-mono font-semibold text-white group-hover:text-blue-400 flex items-center gap-1.5">
               <Zap size={14} className="text-blue-400" /> 100-Word Bullets
@@ -136,10 +133,7 @@ export default function Summarizer({ settings, selectedModel }) {
           </p>
         </button>
 
-        <button
-          onClick={() => runPreset('50 words', 'paragraph')}
-          className="vercel-preset-card group"
-        >
+        <button onClick={() => runPreset('50 words', 'paragraph')} className="vercel-preset-card group">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-mono font-semibold text-white group-hover:text-emerald-400 flex items-center gap-1.5">
               <FileText size={14} className="text-emerald-400" /> Executive Paragraph
@@ -151,10 +145,7 @@ export default function Summarizer({ settings, selectedModel }) {
           </p>
         </button>
 
-        <button
-          onClick={() => runPreset('Detailed', 'bullets')}
-          className="vercel-preset-card group"
-        >
+        <button onClick={() => runPreset('Detailed', 'bullets')} className="vercel-preset-card group">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-mono font-semibold text-white group-hover:text-purple-400 flex items-center gap-1.5">
               <Sparkles size={14} className="text-purple-400" /> Deep Sectional Analysis
@@ -285,33 +276,37 @@ export default function Summarizer({ settings, selectedModel }) {
         </div>
       </div>
 
-      {/* Output Inspector */}
+      {/* Rich Intuitive Output Inspector */}
       <AnimatePresence>
         {result && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vercel-card p-6 space-y-4 border-white/20"
+            className="vercel-card p-6 space-y-5 border-white/20"
           >
-            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
-              <div className="flex items-center gap-3">
-                <span className="vercel-badge vercel-badge-neutral">DELLM OUTPUT</span>
-                <h3 className="text-sm font-semibold text-white font-mono">{result.title}</h3>
+            {/* Header & View Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1f1f1f] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="vercel-badge vercel-badge-emerald font-mono">SYNTHESIS COMPLETE</span>
+                  <span className="text-xs font-mono text-[#666666]">• {result.latency_seconds}s</span>
+                </div>
+                <h3 className="text-base font-semibold text-white tracking-tight">{result.title}</h3>
               </div>
 
               <div className="flex items-center gap-2">
                 <div className="flex bg-[#000000] p-0.5 rounded border border-[#222222] text-xs">
                   <button
                     onClick={() => setViewTab('rendered')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'rendered' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Eye size={12} className="inline mr-1" /> Rendered
+                    <Eye size={12} className="inline mr-1" /> Visual Report
                   </button>
                   <button
                     onClick={() => setViewTab('markdown')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'markdown' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
@@ -319,11 +314,11 @@ export default function Summarizer({ settings, selectedModel }) {
                   </button>
                   <button
                     onClick={() => setViewTab('curl')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'curl' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Terminal size={12} className="inline mr-1" /> cURL Snippet
+                    <Terminal size={12} className="inline mr-1" /> cURL API
                   </button>
                 </div>
 
@@ -336,26 +331,41 @@ export default function Summarizer({ settings, selectedModel }) {
               </div>
             </div>
 
+            {/* Visual Report */}
             {viewTab === 'rendered' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-[#000000] border-l-2 border-white rounded-r text-xs leading-relaxed text-[#cccccc]">
-                  {result.summary}
+              <div className="space-y-5">
+                {/* Executive Summary Block */}
+                <div className="p-4 bg-[#000000] border-l-4 border-white rounded-r-md">
+                  <span className="text-[0.65rem] font-mono font-bold text-[#888888] uppercase block mb-1">
+                    Executive Synopsis
+                  </span>
+                  <p className="text-xs leading-relaxed text-[#eeeeee]">
+                    {result.summary}
+                  </p>
                 </div>
 
+                {/* Key Takeaway Grid Cards */}
                 {result.bullets?.length > 0 && (
                   <div className="space-y-2">
-                    <span className="text-[0.68rem] font-mono font-bold text-[#888888] uppercase block">Key Takeaways</span>
-                    {result.bullets.map((bullet, idx) => (
-                      <div key={idx} className="p-2.5 bg-[#000000] border border-[#1f1f1f] rounded text-xs text-[#dddddd] flex items-start gap-2.5">
-                        <CheckCircle size={14} className="text-white shrink-0 mt-0.5" />
-                        <span>{bullet}</span>
-                      </div>
-                    ))}
+                    <span className="text-[0.68rem] font-mono font-bold text-[#888888] uppercase block tracking-wider">
+                      Key Structural Takeaways ({result.bullets.length})
+                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {result.bullets.map((bullet, idx) => (
+                        <div key={idx} className="p-3 bg-[#000000] border border-[#1f1f1f] rounded-md flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full bg-[#111111] border border-[#222222] flex items-center justify-center shrink-0 mt-0.5">
+                            <CheckCircle size={12} className="text-emerald-400" />
+                          </div>
+                          <p className="text-xs text-[#dddddd] leading-relaxed">{bullet}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
+            {/* Markdown View */}
             {viewTab === 'markdown' && (
               <pre className="vercel-code">
 {`# ${result.title}
@@ -368,6 +378,7 @@ ${(result.bullets || []).map(b => `- ${b}`).join('\n')}`}
               </pre>
             )}
 
+            {/* cURL Snippet View */}
             {viewTab === 'curl' && (
               <pre className="vercel-code">
 {`curl -X POST "http://localhost:8000/api/summarize" \\
@@ -381,12 +392,13 @@ ${(result.bullets || []).map(b => `- ${b}`).join('\n')}`}
               </pre>
             )}
 
+            {/* Telemetry Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-[#1f1f1f] text-[0.7rem] font-mono text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} /> Latency: {result.latency_seconds}s
+                <Clock size={12} /> Execution Latency: {result.latency_seconds}s
               </span>
               <span className="flex items-center gap-1.5">
-                <Cpu size={12} /> Runtime: {result.model_name}
+                <Cpu size={12} /> Engine Model: {result.model_name}
               </span>
             </div>
           </motion.div>

@@ -189,30 +189,36 @@ export default function Rewriter({ settings, selectedModel, presets }) {
         </div>
       </div>
 
-      {/* Output */}
+      {/* Output Inspector */}
       <AnimatePresence>
         {result && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vercel-card p-6 space-y-4 border-white/20"
+            className="vercel-card p-6 space-y-5 border-white/20"
           >
-            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
-              <span className="vercel-badge vercel-badge-neutral">REWRITE COMPARISON</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1f1f1f] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="vercel-badge vercel-badge-emerald font-mono">REWRITE COMPLETED</span>
+                  <span className="text-xs font-mono text-[#666666]">• Preset: {result.preset}</span>
+                </div>
+                <h3 className="text-base font-semibold text-white font-mono">Fact-Locked Output Inspector</h3>
+              </div>
 
               <div className="flex items-center gap-2">
                 <div className="flex bg-[#000000] p-0.5 rounded border border-[#222222] text-xs">
                   <button
                     onClick={() => setViewTab('rendered')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'rendered' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
-                    <Eye size={12} className="inline mr-1" /> Comparison
+                    <Eye size={12} className="inline mr-1" /> Side-by-Side
                   </button>
                   <button
                     onClick={() => setViewTab('json')}
-                    className={`px-2.5 py-1 rounded text-[0.7rem] font-medium ${
+                    className={`px-3 py-1 rounded text-[0.725rem] font-medium transition-colors ${
                       viewTab === 'json' ? 'bg-white text-black' : 'text-[#888888] hover:text-white'
                     }`}
                   >
@@ -229,8 +235,8 @@ export default function Rewriter({ settings, selectedModel, presets }) {
               </div>
             </div>
 
-            {/* Fact Lock Banner */}
-            <div className={`p-3 rounded flex items-center justify-between text-xs font-mono ${
+            {/* Fact Lock Gauge Banner */}
+            <div className={`p-3 rounded-md flex items-center justify-between text-xs font-mono ${
               factCheck.passed
                 ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
                 : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
@@ -239,29 +245,25 @@ export default function Rewriter({ settings, selectedModel, presets }) {
                 {factCheck.passed ? <ShieldCheck size={16} /> : <AlertTriangle size={16} />}
                 <span>{factCheck.passed ? 'Fact-Lock Check Passed (100% Facts Preserved)' : 'Fact-Lock Warning'}</span>
               </div>
-              <span>Score: {factCheck.score || 100}%</span>
+              <span>Verification Score: {factCheck.score || 100}%</span>
             </div>
 
             {viewTab === 'rendered' ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[0.65rem] font-mono text-[#888888] block">ORIGINAL</span>
-                    <div className="p-3 bg-[#000000] border border-[#1f1f1f] rounded text-xs leading-relaxed text-[#888888] whitespace-pre-wrap">
-                      {result.original}
-                    </div>
+                  <div className="p-4 bg-[#000000] border border-[#1f1f1f] rounded-md space-y-1.5">
+                    <span className="text-[0.65rem] font-mono font-bold text-[#888888] uppercase block">ORIGINAL INPUT DRAFT</span>
+                    <p className="text-xs leading-relaxed text-[#888888] whitespace-pre-wrap">{result.original}</p>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[0.65rem] font-mono text-emerald-400 block">REWRITTEN</span>
-                    <div className="p-3 bg-[#000000] border border-emerald-500/30 rounded text-xs leading-relaxed text-white whitespace-pre-wrap">
-                      {result.rewritten}
-                    </div>
+                  <div className="p-4 bg-[#000000] border border-emerald-500/30 rounded-md space-y-1.5">
+                    <span className="text-[0.65rem] font-mono font-bold text-emerald-400 uppercase block">REWRITTEN FACT-LOCKED OUTPUT</span>
+                    <p className="text-xs leading-relaxed text-white whitespace-pre-wrap">{result.rewritten}</p>
                   </div>
                 </div>
 
                 {result.diff?.length > 0 && (
-                  <details className="bg-[#000000] border border-[#1f1f1f] rounded p-3">
+                  <details className="bg-[#000000] border border-[#1f1f1f] rounded-md p-3">
                     <summary className="text-[0.7rem] font-mono text-[#888888] cursor-pointer flex items-center gap-1.5">
                       <FileDiff size={14} /> Line-by-Line Unified Diff
                     </summary>
@@ -285,7 +287,7 @@ export default function Rewriter({ settings, selectedModel, presets }) {
 
             <div className="flex items-center justify-between pt-3 border-t border-[#1f1f1f] text-[0.7rem] font-mono text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} /> Latency: {result.latency_seconds}s
+                <Clock size={12} /> Execution Latency: {result.latency_seconds}s
               </span>
               <span>Model: {result.model_name}</span>
             </div>
