@@ -10,7 +10,7 @@ from modules.models import PageContent, Section, TableData
 class PDFExtractor(BaseExtractor):
 
     def extract(self, data: bytes) -> Tuple[List[PageContent], List[str]]:
-        import fitz
+        import pymupdf as fitz
 
         pages: List[PageContent] = []
         warnings: List[str] = []
