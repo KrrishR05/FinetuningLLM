@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Microscope, Newspaper, PenLine } from 'lucide-react'
-import Header from './components/Header'
-import Sidebar from './components/Sidebar'
+import CommandBar from './components/CommandBar'
+import NavRail from './components/NavRail'
 import Summarizer from './pages/Summarizer'
 import ScienceBrief from './pages/ScienceBrief'
 import NewsDigest from './pages/NewsDigest'
@@ -10,12 +10,12 @@ import Rewriter from './pages/Rewriter'
 
 const TABS = [
   { id: 'summarizer', label: 'AI/ML Summarizer', icon: Zap },
-  { id: 'science', label: 'S&T Brief', icon: Microscope },
-  { id: 'news', label: 'News Digest', icon: Newspaper },
-  { id: 'rewriter', label: 'Rewrite & Grammar', icon: PenLine },
+  { id: 'science', label: 'S&T Research Brief', icon: Microscope },
+  { id: 'news', label: 'News & Fact Digest', icon: Newspaper },
+  { id: 'rewriter', label: 'Rewrite & Fact-Lock', icon: PenLine },
 ]
 
-function App() {
+export default function App() {
   const [activeTab, setActiveTab] = useState('summarizer')
   const [models, setModels] = useState([])
   const [presets, setPresets] = useState({})
@@ -43,7 +43,7 @@ function App() {
       .catch(() => {})
   }, [])
 
-  // Fetch health when model changes
+  // Fetch health status when selected model changes
   useEffect(() => {
     if (!selectedModel) return
     fetch(`/api/health?model_id=${selectedModel}`)
@@ -63,16 +63,13 @@ function App() {
       .catch(() => alert('Failed to unload model'))
   }
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
-  }
-
   return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <Sidebar
+    <div className="min-h-screen flex flex-col bg-[var(--bg-app)] relative">
+      {/* Ambient background mesh glow */}
+      <div className="ambient-mesh" />
+
+      {/* Top Command & Telemetry Bar */}
+      <CommandBar
         models={models}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
@@ -82,50 +79,38 @@ function App() {
         onUnloadVRAM={handleUnloadVRAM}
       />
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0 p-6" style={{ marginLeft: '320px' }}>
-        <Header health={health} />
+      {/* Main Studio Area */}
+      <div className="flex-1 flex overflow-hidden z-10">
+        {/* Left Navigation Rail */}
+        <NavRail tabs={TABS} activeTab={activeTab} onSelectTab={setActiveTab} />
 
-        {/* Tab Bar */}
-        <div className="tab-bar mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+        {/* Studio Workspace Content */}
+        <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-y-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-7xl mx-auto"
             >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Page Content with Animated Transitions */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            {activeTab === 'summarizer' && (
-              <Summarizer settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'science' && (
-              <ScienceBrief settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'news' && (
-              <NewsDigest settings={settings} selectedModel={selectedModel} />
-            )}
-            {activeTab === 'rewriter' && (
-              <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+              {activeTab === 'summarizer' && (
+                <Summarizer settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'science' && (
+                <ScienceBrief settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'news' && (
+                <NewsDigest settings={settings} selectedModel={selectedModel} />
+              )}
+              {activeTab === 'rewriter' && (
+                <Rewriter settings={settings} selectedModel={selectedModel} presets={presets} />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   )
 }
-
-export default App

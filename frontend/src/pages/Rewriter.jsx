@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PenLine, SlidersHorizontal, Download, LayoutTemplate, ShieldCheck, AlertTriangle, FileDiff, CheckCircle, SplitSquareVertical } from 'lucide-react'
+import { PenLine, Sliders, Download, ShieldCheck, AlertTriangle, FileDiff, Clock, ArrowRight } from 'lucide-react'
 
 export default function Rewriter({ settings, selectedModel, presets }) {
   const [text, setText] = useState('')
@@ -56,173 +56,155 @@ export default function Rewriter({ settings, selectedModel, presets }) {
   const factCheck = result?.fact_check || {}
 
   return (
-    <div>
-      <motion.h2
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-2xl font-semibold text-white mb-2 flex items-center gap-2"
-      >
-        <PenLine size={24} className="text-white" /> Reformatting & Contextual Grammar Fixer
-      </motion.h2>
-      <p className="text-sm text-[#a1a1aa] mb-8">
-        Paste text to fix grammar and reformat with fact-lock protection. All facts are verified after rewriting.
-      </p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
+          <PenLine size={24} className="text-cyan-400" /> Reformatting & Fact-Lock Rewriter
+        </h2>
+        <p className="text-sm text-[var(--text-dim)] mt-1">
+          Contextual grammar correction and tone rewriting guaranteed by zero-hallucination fact verification.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="col-span-2">
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Paste the rough draft, report text, or email you want to fix..."
-            rows={12}
-            className="mb-4"
-          />
-          {text.trim() && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3 mb-6"
-            >
-              <span className="badge badge-neutral text-xs">
-                <LayoutTemplate size={12} /> {text.split(/\s+/).length.toLocaleString()} Words
-              </span>
-            </motion.div>
-          )}
-          {error && (
-            <div className="p-4 rounded-xl bg-[rgba(239,68,68,0.05)] border border-[rgba(239,68,68,0.2)] text-[#f87171] text-sm mb-6 flex items-center gap-2">
-              <span className="font-bold">Error:</span> {error}
-            </div>
-          )}
+      {/* Main Studio Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-4">
+          <div className="studio-card p-6">
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Paste raw draft, email, report, or text to fix and reformat..."
+              rows={12}
+              className="studio-canvas"
+            />
+          </div>
+
+          {error && <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">{error}</div>}
         </div>
 
-        <div className="col-span-1">
-          <div className="glass-card !p-6">
-            <h3 className="text-xs uppercase tracking-widest font-semibold text-[#71717a] mb-5 flex items-center gap-2">
-              <SlidersHorizontal size={14} /> Rewrite Settings
-            </h3>
-            <div className="mb-8">
-              <label className="text-xs text-[#a1a1aa] block mb-2 font-medium">Style Preset</label>
-              <select value={preset} onChange={e => setPreset(e.target.value)}>
+        <div className="lg:col-span-4">
+          <div className="studio-card p-6 studio-card-glow space-y-6">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-4">
+              <Sliders size={16} className="text-cyan-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Style Controls</h3>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Transformation Preset
+              </label>
+              <select
+                value={preset}
+                onChange={e => setPreset(e.target.value)}
+                className="studio-select"
+              >
                 {Object.entries(presets).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
-            <button className="btn-primary w-full" onClick={handleGenerate} disabled={loading || !text.trim()}>
-              {loading ? <><div className="spinner" /> Rewriting...</> : <><PenLine size={16} /> Rewrite Text</>}
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !text.trim()}
+              className="btn-studio-primary w-full py-3 text-sm"
+            >
+              {loading ? (
+                <>
+                  <div className="studio-spinner" /> Rewriting & Fact-Locking...
+                </>
+              ) : (
+                <>
+                  <PenLine size={16} /> Execute Rewrite <ArrowRight size={14} />
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Output */}
+      {/* Studio Diff Output */}
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12 mb-20"
+            className="studio-card p-8 space-y-6 border-cyan-500/30"
           >
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-4">
-              <SplitSquareVertical size={20} className="text-[#a1a1aa]" /> Original vs. Rewritten
-            </h3>
-
-            {/* Side by side comparison */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-                <h4 className="text-[0.7rem] font-semibold text-[#71717a] uppercase tracking-widest mb-3 pl-1">Original Text</h4>
-                <div className="p-5 rounded-xl text-sm leading-relaxed text-[#a1a1aa] whitespace-pre-wrap bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)]">
-                  {result.original}
-                </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                <h4 className="text-[0.7rem] font-semibold text-[#34d399] uppercase tracking-widest mb-3 pl-1">Rewritten Result</h4>
-                <div className="p-5 rounded-xl text-sm leading-relaxed text-white whitespace-pre-wrap bg-[rgba(16,185,129,0.05)] border border-[rgba(16,185,129,0.2)] shadow-[0_0_20px_rgba(16,185,129,0.05)]">
-                  {result.rewritten}
-                </div>
-              </motion.div>
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+              <h3 className="text-xl font-bold text-white">Original vs. Rewritten Diff Workbench</h3>
+              <button onClick={downloadRewrite} className="btn-studio-secondary text-xs">
+                <Download size={14} /> Export Result
+              </button>
             </div>
 
-            {/* Fact-Lock Report */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="p-5 rounded-xl mb-6 flex items-center gap-3"
-              style={{
-                background: factCheck.passed ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.05)',
-                border: `1px solid ${factCheck.passed ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-              }}
-            >
-              {factCheck.passed ? (
-                <ShieldCheck size={20} className="text-[#34d399]" />
-              ) : (
-                <AlertTriangle size={20} className="text-[#f87171]" />
-              )}
-              <span className={`text-sm font-medium ${factCheck.passed ? 'text-[#34d399]' : 'text-[#f87171]'}`}>
-                {factCheck.passed
-                  ? `Fact-Lock PASSED — All ${factCheck.total_facts || 0} facts preserved (score: ${factCheck.score})`
-                  : `Fact-Lock WARNING — ${factCheck.missing_count || 0} of ${factCheck.total_facts || 0} facts may have changed (score: ${factCheck.score})`
-                }
+            {/* Fact-Lock Score Banner */}
+            <div className={`p-4 rounded-xl flex items-center justify-between ${
+              factCheck.passed
+                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+            }`}>
+              <div className="flex items-center gap-3">
+                {factCheck.passed ? <ShieldCheck size={22} /> : <AlertTriangle size={22} />}
+                <div>
+                  <h4 className="text-sm font-bold">
+                    {factCheck.passed ? 'Fact-Lock Verification Passed' : 'Fact-Lock Warning'}
+                  </h4>
+                  <p className="text-xs opacity-80">
+                    {factCheck.passed
+                      ? `All ${factCheck.total_facts || 0} facts fully preserved without hallucination.`
+                      : `${factCheck.missing_count || 0} of ${factCheck.total_facts || 0} facts may have changed.`}
+                  </p>
+                </div>
+              </div>
+              <span className="font-mono text-sm font-bold bg-black/40 px-3 py-1 rounded-lg border border-white/10">
+                Score: {factCheck.score || 100}%
               </span>
-            </motion.div>
+            </div>
 
-            {/* Warnings */}
-            {result.warnings?.length > 0 && (
-              <details className="mb-4 group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl p-4">
-                <summary className="text-sm text-[#f59e0b] cursor-pointer font-medium flex items-center gap-2">
-                  <AlertTriangle size={16} /> Fact-Lock Warnings ({result.warnings.length})
-                </summary>
-                <div className="mt-4 space-y-2 pl-6">
-                  {result.warnings.map((w, i) => (
-                    <p key={i} className="text-sm text-[#a1a1aa] leading-relaxed">• {w}</p>
-                  ))}
+            {/* Side-by-side comparison */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest block">Original Text</span>
+                <div className="p-4 bg-black/40 border border-white/5 rounded-xl text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
+                  {result.original}
                 </div>
-              </details>
-            )}
+              </div>
 
-            {/* Changes */}
-            {result.changes?.length > 0 && (
-              <details className="mb-4 group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl p-4">
-                <summary className="text-sm text-[#60a5fa] cursor-pointer font-medium flex items-center gap-2">
-                  <CheckCircle size={16} /> Changes Made ({result.changes.length})
-                </summary>
-                <div className="mt-4 space-y-2 pl-6">
-                  {result.changes.map((c, i) => (
-                    <p key={i} className="text-sm text-[#a1a1aa] leading-relaxed">• {c}</p>
-                  ))}
+              <div className="space-y-2">
+                <span className="text-[0.65rem] font-bold text-emerald-400 uppercase tracking-widest block">Rewritten Version</span>
+                <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-sm leading-relaxed text-white whitespace-pre-wrap">
+                  {result.rewritten}
                 </div>
-              </details>
-            )}
+              </div>
+            </div>
 
-            {/* Diff */}
+            {/* Unified Diff */}
             {result.diff?.length > 0 && (
-              <details className="mb-8 group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl p-4">
-                <summary className="text-sm text-[#a1a1aa] cursor-pointer font-medium flex items-center gap-2">
-                  <FileDiff size={16} /> Unified Diff
+              <details className="bg-black/50 border border-white/5 rounded-xl p-4">
+                <summary className="text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer flex items-center gap-2">
+                  <FileDiff size={16} /> View Unified Line Diff
                 </summary>
-                <pre className="mt-4 text-xs font-mono p-5 rounded-lg overflow-x-auto bg-[#040405] border border-[rgba(255,255,255,0.05)]">
+                <pre className="mt-4 p-4 font-mono text-xs overflow-x-auto bg-black rounded-lg">
                   {result.diff.map((line, i) => (
                     <div key={i} className={
-                      line.startsWith('+') ? 'text-[#34d399]' :
-                      line.startsWith('-') ? 'text-[#f87171]' :
-                      'text-[#71717a]'
-                    }>{line}</div>
+                      line.startsWith('+') ? 'text-emerald-400' :
+                      line.startsWith('-') ? 'text-rose-400' :
+                      'text-slate-500'
+                    }>
+                      {line}
+                    </div>
                   ))}
                 </pre>
               </details>
             )}
 
-            <div className="flex items-center justify-between bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] p-4 rounded-xl">
-              <button className="btn-secondary text-sm" onClick={downloadRewrite}>
-                <Download size={16} /> Export Rewrite
-              </button>
-              <span className="text-xs text-[#71717a] flex items-center gap-4">
-                <span>Latency: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.latency_seconds}s</code></span>
-                <span>Model: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.model_name}</code></span>
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-slate-400 font-mono">
+              <span className="flex items-center gap-2">
+                <Clock size={14} className="text-cyan-400" /> Latency: {result.latency_seconds}s
               </span>
+              <span>Model: {result.model_name}</span>
             </div>
           </motion.div>
         )}

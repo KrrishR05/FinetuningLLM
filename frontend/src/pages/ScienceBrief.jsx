@@ -1,42 +1,46 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Microscope, FileText, UploadCloud, ClipboardPaste, BarChart2, Hash, SlidersHorizontal, Download, FlaskConical, Beaker, CheckCircle } from 'lucide-react'
-
-const BRIEF_FIELDS = [
-  'Title', 'Authors', 'Source/Published', 'Objective',
-  'Method', 'Key Findings', 'Important Values/Dates',
-  'Limitations', 'Implications', 'Keywords', 'Source Pages',
-]
+import { Microscope, FileText, UploadCloud, Sliders, Download, Layers, Clock, ArrowRight } from 'lucide-react'
 
 export default function ScienceBrief({ settings, selectedModel }) {
   const [inputMode, setInputMode] = useState('upload')
   const [text, setText] = useState('')
-  const [fileName, setFileName] = useState('')
+  const [pages, setPages] = useState([])
+  const [chunkSize, setChunkSize] = useState(3000)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
-  const [chunkSize, setChunkSize] = useState(3000)
-  const fileInputRef = useRef(null)
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFileName(file.name)
+    const uploadedFile = e.target.files[0]
+    if (!uploadedFile) return
+    setLoading(true)
     setError('')
-    const formData = new FormData()
-    formData.append('file', file)
     try {
+      const formData = new FormData()
+      formData.append('file', uploadedFile)
       const res = await fetch('/api/extract', { method: 'POST', body: formData })
       const data = await res.json()
-      if (data.full_text) setText(data.full_text)
-      else if (data.warnings?.length) setError(data.warnings[0])
+      if (data.pages?.length) {
+        setPages(data.pages)
+        setText(data.full_text)
+      } else {
+        setError(data.warnings?.[0] || 'Extraction failed')
+      }
     } catch {
-      setError('Failed to extract document.')
+      setError('File extraction failed.')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleGenerate = async () => {
-    if (!text.trim()) return
+    let sourcePages = pages
+    if (!sourcePages.length && text.trim()) {
+      sourcePages = [{ page_number: 1, text: text, source_label: 'Pasted Text' }]
+    }
+    if (!sourcePages.length) return
+
     setLoading(true)
     setError('')
     setResult(null)
@@ -45,20 +49,20 @@ export default function ScienceBrief({ settings, selectedModel }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text,
+          pages: sourcePages,
           model_id: selectedModel,
-          chunk_size: chunkSize,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
           system_prompt: settings.systemPrompt || null,
           auto_unload: settings.autoUnload,
+          max_chunk_chars: chunkSize,
         }),
       })
       const data = await res.json()
       if (data.status === 'success') setResult(data)
-      else setError(data.error || 'Brief generation failed.')
+      else setError(data.error || 'S&T Brief generation failed.')
     } catch {
-      setError('Connection failed.')
+      setError('Connection failed. Please verify backend.')
     } finally {
       setLoading(false)
     }
@@ -66,7 +70,9 @@ export default function ScienceBrief({ settings, selectedModel }) {
 
   const downloadBrief = () => {
     if (!result?.brief) return
-    const content = BRIEF_FIELDS.map(f => `${f}: ${result.brief[f] || 'N/A'}`).join('\n\n')
+    const content = Object.entries(result.brief)
+      .map(([key, val]) => `${key.toUpperCase()}:\n${val}`)
+      .join('\n\n')
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -76,136 +82,158 @@ export default function ScienceBrief({ settings, selectedModel }) {
     URL.revokeObjectURL(url)
   }
 
-  return (
-    <div>
-      <motion.h2
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-2xl font-semibold text-white mb-2 flex items-center gap-2"
-      >
-        <Microscope size={24} className="text-white" /> S&T Document Research Brief
-      </motion.h2>
-      <p className="text-sm text-[#a1a1aa] mb-8">
-        Upload a scientific/technical PDF or DOCX to generate a structured research brief with page citations.
-      </p>
+  const fields = [
+    'Title', 'Authors', 'Source/Published', 'Objective',
+    'Method', 'Key Findings', 'Important Values/Dates',
+    'Limitations', 'Implications', 'Keywords', 'Source Pages'
+  ]
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="col-span-2">
-          <div className="flex gap-2 mb-4 bg-[rgba(255,255,255,0.02)] p-1 rounded-lg border border-[rgba(255,255,255,0.04)] w-fit">
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                inputMode === 'upload' 
-                  ? 'bg-white text-black shadow-sm' 
-                  : 'text-[#a1a1aa] hover:text-white hover:bg-[rgba(255,255,255,0.04)]'
-              }`}
-              onClick={() => setInputMode('upload')}
-            >
-              <UploadCloud size={16} /> Upload S&T Document
-            </button>
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                inputMode === 'paste' 
-                  ? 'bg-white text-black shadow-sm' 
-                  : 'text-[#a1a1aa] hover:text-white hover:bg-[rgba(255,255,255,0.04)]'
-              }`}
-              onClick={() => setInputMode('paste')}
-            >
-              <ClipboardPaste size={16} /> Paste Raw Text
-            </button>
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
+          <Microscope size={24} className="text-violet-400" /> S&T Document Research Brief
+        </h2>
+        <p className="text-sm text-[var(--text-dim)] mt-1">
+          Map-Reduce structural analysis for scientific publications, technical papers, and engineering reports.
+        </p>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-4">
+          <div className="studio-card p-6">
+            <div className="flex gap-2 mb-4 bg-black/40 p-1 rounded-xl w-fit border border-[var(--border-subtle)]">
+              <button
+                onClick={() => setInputMode('upload')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
+                  inputMode === 'upload' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UploadCloud size={14} /> Upload Paper (.pdf/.docx)
+              </button>
+              <button
+                onClick={() => setInputMode('text')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
+                  inputMode === 'text' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <FileText size={14} /> Paste Text
+              </button>
+            </div>
+
+            {inputMode === 'upload' ? (
+              <div className="border-2 border-dashed border-slate-700/60 hover:border-violet-500/50 rounded-xl p-10 text-center transition-colors bg-black/20">
+                <Microscope size={36} className="mx-auto text-violet-400 mb-3" />
+                <p className="text-sm font-semibold text-white">Upload research paper or patent</p>
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="st-upload"
+                />
+                <label htmlFor="st-upload" className="btn-studio-secondary text-xs mt-4 inline-flex">
+                  Choose Document
+                </label>
+
+                {pages.length > 0 && (
+                  <div className="mt-4 p-3 bg-violet-500/10 border border-violet-500/30 rounded-lg text-xs text-violet-400 text-left">
+                    Document parsed into {pages.length} pages. Ready for map-reduce.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Paste research paper abstract, methodology, or full text..."
+                rows={12}
+                className="studio-canvas"
+              />
+            )}
           </div>
 
-          {inputMode === 'paste' ? (
-            <textarea
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Paste the research paper or technical report text..."
-              rows={12}
-              className="mb-4"
-            />
-          ) : (
-            <div className="dropzone mb-4" onClick={() => fileInputRef.current?.click()}>
-              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md" onChange={handleFileUpload} className="hidden" />
-              <FlaskConical size={48} className="text-[#3f3f46] mb-2" />
-              <p className="text-sm text-[#fdfdfd] font-medium mb-1">{fileName || 'Drop S&T document here or click to browse'}</p>
-              <p className="text-xs text-[#71717a]">Supports PDF, DOCX, TXT, MD</p>
-            </div>
-          )}
-
-          {text.trim() && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3 mb-6 flex-wrap"
-            >
-              <span className="badge badge-neutral text-xs">
-                <BarChart2 size={12} /> {text.split(/\s+/).length.toLocaleString()} Words
-              </span>
-              <span className="badge badge-neutral text-xs">
-                <Hash size={12} /> {text.length.toLocaleString()} Characters
-              </span>
-            </motion.div>
-          )}
-
-          {error && (
-            <div className="p-4 rounded-xl bg-[rgba(239,68,68,0.05)] border border-[rgba(239,68,68,0.2)] text-[#f87171] text-sm mb-6 flex items-center gap-2">
-              <span className="font-bold">Error:</span> {error}
-            </div>
-          )}
+          {error && <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">{error}</div>}
         </div>
 
-        <div className="col-span-1">
-          <div className="glass-card !p-6">
-            <h3 className="text-xs uppercase tracking-widest font-semibold text-[#71717a] mb-5 flex items-center gap-2">
-              <SlidersHorizontal size={14} /> Brief Settings
-            </h3>
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-[#a1a1aa] font-medium">Chunk Size</span>
-                <span className="text-xs font-mono text-white bg-[rgba(255,255,255,0.05)] px-2 py-0.5 rounded">{chunkSize}</span>
-              </div>
-              <input type="range" min="1500" max="5000" step="500" value={chunkSize} onChange={e => setChunkSize(parseInt(e.target.value))} className="w-full" />
+        <div className="lg:col-span-4">
+          <div className="studio-card p-6 studio-card-glow space-y-6">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-4">
+              <Sliders size={16} className="text-violet-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Map-Reduce Settings</h3>
             </div>
-            <button className="btn-primary w-full" onClick={handleGenerate} disabled={loading || !text.trim()}>
-              {loading ? <><div className="spinner" /> Generating...</> : <><Beaker size={16} /> Generate S&T Brief</>}
+
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Chunk Window Size ({chunkSize} chars)
+              </label>
+              <input
+                type="range"
+                min="1500"
+                max="5000"
+                step="500"
+                value={chunkSize}
+                onChange={e => setChunkSize(parseInt(e.target.value))}
+              />
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading || (!pages.length && !text.trim())}
+              className="btn-studio-primary w-full py-3 text-sm !from-violet-600 !to-indigo-600 shadow-violet-500/25"
+            >
+              {loading ? (
+                <>
+                  <div className="studio-spinner" /> Extracting S&T Brief...
+                </>
+              ) : (
+                <>
+                  <Microscope size={16} /> Generate Research Brief <ArrowRight size={14} />
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Output */}
+      {/* Brief Result Cards */}
       <AnimatePresence>
         {result?.brief && (
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12 mb-20"
+            className="studio-card p-8 space-y-6 border-violet-500/30"
           >
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-4">
-              <CheckCircle size={20} className="text-[#a1a1aa]" /> Structured Research Brief
-            </h3>
-            <div className="space-y-4 mb-8">
-              {BRIEF_FIELDS.map((field, i) => (
-                <motion.div
-                  key={field}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="p-5 rounded-xl border border-[rgba(255,255,255,0.03)] bg-[rgba(255,255,255,0.015)]"
-                >
-                  <span className="text-[0.65rem] uppercase tracking-widest text-[#a1a1aa] font-semibold mb-1.5 block">{field}</span>
-                  <div className="text-sm text-[#fdfdfd] leading-relaxed whitespace-pre-wrap">{result.brief[field] || 'Not stated in source.'}</div>
-                </motion.div>
-              ))}
-            </div>
-            <div className="flex items-center justify-between bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] p-4 rounded-xl">
-              <button className="btn-secondary text-sm" onClick={downloadBrief}>
-                <Download size={16} /> Export Brief
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+              <h3 className="text-xl font-bold text-white">Structured S&T Research Brief</h3>
+              <button onClick={downloadBrief} className="btn-studio-secondary text-xs">
+                <Download size={14} /> Download Brief
               </button>
-              <span className="text-xs text-[#71717a] flex items-center gap-4">
-                <span>Latency: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.latency_seconds}s</code></span>
-                <span>Chunks: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.num_chunks}</code></span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fields.map(field => {
+                const val = result.brief[field]
+                if (!val) return null
+                return (
+                  <div key={field} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-1">
+                    <span className="text-[0.65rem] font-bold text-violet-400 uppercase tracking-widest block">
+                      {field}
+                    </span>
+                    <p className="text-sm text-slate-200 leading-relaxed">{val}</p>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-slate-400 font-mono">
+              <span className="flex items-center gap-2">
+                <Clock size={14} className="text-violet-400" /> Latency: {result.latency_seconds}s
+              </span>
+              <span className="flex items-center gap-2">
+                <Layers size={14} className="text-cyan-400" /> Chunks Processed: {result.num_chunks || 1}
               </span>
             </div>
           </motion.div>

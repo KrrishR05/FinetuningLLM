@@ -1,50 +1,47 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ClipboardPaste, UploadCloud, FileText, BarChart2, Hash, Clock, SlidersHorizontal, Download, FileJson } from 'lucide-react'
+import { Sparkles, FileText, UploadCloud, Sliders, Download, CheckCircle, Clock, Cpu, ArrowRight } from 'lucide-react'
 
 export default function Summarizer({ settings, selectedModel }) {
-  const [inputMode, setInputMode] = useState('paste')
+  const [inputMode, setInputMode] = useState('text')
   const [text, setText] = useState('')
-  const [fileName, setFileName] = useState('')
+  const [file, setFile] = useState(null)
+  const [extractedInfo, setExtractedInfo] = useState(null)
+  const [targetLength, setTargetLength] = useState('100 words')
+  const [outputFormat, setOutputFormat] = useState('bullets')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
-  const [targetLength, setTargetLength] = useState('100 words')
-  const [outputFormat, setOutputFormat] = useState('bullets')
-  const fileInputRef = useRef(null)
-
-  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0
-  const charCount = text.length
-  const readTime = Math.max(1, Math.ceil(wordCount / 200))
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFileName(file.name)
+    const uploadedFile = e.target.files[0]
+    if (!uploadedFile) return
+    setFile(uploadedFile)
+    setLoading(true)
     setError('')
-
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
+      const formData = new FormData()
+      formData.append('file', uploadedFile)
       const res = await fetch('/api/extract', { method: 'POST', body: formData })
       const data = await res.json()
       if (data.full_text) {
         setText(data.full_text)
-      } else if (data.warnings?.length) {
-        setError(data.warnings[0])
+        setExtractedInfo(data.metadata)
+      } else {
+        setError(data.warnings?.[0] || 'Extraction failed')
       }
     } catch {
-      setError('Failed to extract document.')
+      setError('File extraction failed.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleGenerate = async () => {
+  const handleSummarize = async () => {
     if (!text.trim()) return
     setLoading(true)
     setError('')
     setResult(null)
-
     try {
       const res = await fetch('/api/summarize', {
         method: 'POST',
@@ -53,7 +50,7 @@ export default function Summarizer({ settings, selectedModel }) {
           text,
           model_id: selectedModel,
           length: targetLength,
-          fmt: outputFormat,
+          format: outputFormat,
           temperature: settings.temperature,
           max_tokens: settings.maxTokens,
           system_prompt: settings.systemPrompt || null,
@@ -61,182 +58,174 @@ export default function Summarizer({ settings, selectedModel }) {
         }),
       })
       const data = await res.json()
-      if (data.status === 'success') {
-        setResult(data)
-      } else {
-        setError(data.error || 'Summarization failed.')
-      }
+      if (data.status === 'success') setResult(data)
+      else setError(data.error || 'Summarization failed.')
     } catch {
-      setError('Connection failed. Is the backend running?')
+      setError('Connection failed. Please ensure local servers are running.')
     } finally {
       setLoading(false)
     }
   }
 
-  const downloadResult = () => {
+  const downloadSummary = () => {
     if (!result) return
-    let content = `TITLE: ${result.title}\n\nSUMMARY:\n${result.summary}\n`
+    let content = `TITLE: ${result.title}\n\nSUMMARY:\n${result.summary}\n\n`
     if (result.bullets?.length) {
-      content += '\nKEY POINTS:\n' + result.bullets.map(b => `- ${b}`).join('\n')
+      content += 'KEY TAKEAWAYS:\n' + result.bullets.map(b => `- ${b}`).join('\n')
     }
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `summary_${(result.title || 'output').slice(0, 20).replace(/\s/g, '_')}.txt`
+    a.download = `summary_${(result.title || 'document').slice(0, 20).replace(/\s+/g, '_')}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  return (
-    <div>
-      <motion.h2
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-2xl font-semibold text-white mb-2 flex items-center gap-2"
-      >
-        <Zap size={24} className="text-white" /> AI/ML Text Summarization
-      </motion.h2>
-      <p className="text-sm text-[#a1a1aa] mb-8">
-        Summarize unstructured text or documents locally with custom length and structural formatting controls.
-      </p>
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0
+  const charCount = text.length
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Input Column (2/3) */}
-        <div className="col-span-2">
-          {/* Input Mode Toggle */}
-          <div className="flex gap-2 mb-4 bg-[rgba(255,255,255,0.02)] p-1 rounded-lg border border-[rgba(255,255,255,0.04)] w-fit">
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                inputMode === 'paste' 
-                  ? 'bg-white text-black shadow-sm' 
-                  : 'text-[#a1a1aa] hover:text-white hover:bg-[rgba(255,255,255,0.04)]'
-              }`}
-              onClick={() => setInputMode('paste')}
-            >
-              <ClipboardPaste size={16} /> Paste Raw Text
-            </button>
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                inputMode === 'upload' 
-                  ? 'bg-white text-black shadow-sm' 
-                  : 'text-[#a1a1aa] hover:text-white hover:bg-[rgba(255,255,255,0.04)]'
-              }`}
-              onClick={() => setInputMode('upload')}
-            >
-              <UploadCloud size={16} /> Upload Document
-            </button>
+  return (
+    <div className="space-y-8">
+      {/* Studio Header */}
+      <div>
+        <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
+          <Sparkles size={24} className="text-cyan-400" /> AI/ML Intelligence Summarizer
+        </h2>
+        <p className="text-sm text-[var(--text-dim)] mt-1">
+          Extract structural bullet points or executive synopses from raw text and multi-format documents.
+        </p>
+      </div>
+
+      {/* Main Studio Grid: Split View */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Input Canvas (Col 8) */}
+        <div className="lg:col-span-8 space-y-4">
+          <div className="studio-card p-6">
+            {/* Input Mode Selector */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex gap-2 bg-black/40 p-1 rounded-xl border border-[var(--border-subtle)]">
+                <button
+                  onClick={() => setInputMode('text')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
+                    inputMode === 'text' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <FileText size={14} /> Paste Text
+                </button>
+                <button
+                  onClick={() => setInputMode('upload')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors ${
+                    inputMode === 'upload' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <UploadCloud size={14} /> Upload Doc
+                </button>
+              </div>
+
+              {wordCount > 0 && (
+                <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+                  <span>{wordCount.toLocaleString()} words</span>
+                  <span>•</span>
+                  <span>{charCount.toLocaleString()} chars</span>
+                </div>
+              )}
+            </div>
+
+            {/* Editor Canvas or Upload Zone */}
+            {inputMode === 'text' ? (
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Paste unstructured text, research notes, or reports here..."
+                rows={12}
+                className="studio-canvas"
+              />
+            ) : (
+              <div className="border-2 border-dashed border-slate-700/60 hover:border-cyan-500/50 rounded-xl p-10 text-center transition-colors bg-black/20">
+                <UploadCloud size={36} className="mx-auto text-cyan-400 mb-3" />
+                <p className="text-sm font-semibold text-white">Upload document file</p>
+                <p className="text-xs text-slate-400 mt-1">Supports PDF, DOCX, TXT formats</p>
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="doc-upload"
+                />
+                <label htmlFor="doc-upload" className="btn-studio-secondary text-xs mt-4 inline-flex">
+                  Choose File
+                </label>
+
+                {extractedInfo && (
+                  <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 text-left">
+                    Extracted {extractedInfo.num_pages || 1} pages, {extractedInfo.word_count || wordCount} words.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {inputMode === 'paste' ? (
-            <textarea
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Paste the text or report paragraph you wish to summarize..."
-              className="mb-4"
-              rows={12}
-            />
-          ) : (
-            <div
-              className="dropzone mb-4"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => {
-                e.preventDefault()
-                const file = e.dataTransfer.files[0]
-                if (file) {
-                  const dt = new DataTransfer()
-                  dt.items.add(file)
-                  fileInputRef.current.files = dt.files
-                  handleFileUpload({ target: { files: dt.files } })
-                }
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx,.txt"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <FileText size={48} className="text-[#3f3f46] mb-2" />
-              <p className="text-sm text-[#fdfdfd] font-medium mb-1">
-                {fileName || 'Drop a file here or click to browse'}
-              </p>
-              <p className="text-xs text-[#71717a]">Supports PDF, DOCX, TXT</p>
-            </div>
-          )}
-
-          {/* Text Stats */}
-          {text.trim() && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3 mb-6 flex-wrap"
-            >
-              <span className="badge badge-neutral text-xs">
-                <BarChart2 size={12} /> {wordCount.toLocaleString()} Words
-              </span>
-              <span className="badge badge-neutral text-xs">
-                <Hash size={12} /> {charCount.toLocaleString()} Characters
-              </span>
-              <span className="badge badge-neutral text-xs">
-                <Clock size={12} /> ~{readTime} min read
-              </span>
-            </motion.div>
-          )}
-
           {error && (
-            <div className="p-4 rounded-xl bg-[rgba(239,68,68,0.05)] border border-[rgba(239,68,68,0.2)] text-[#f87171] text-sm mb-6 flex items-center gap-2">
-              <span className="font-bold">Error:</span> {error}
+            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">
+              {error}
             </div>
           )}
         </div>
 
-        {/* Config Column (1/3) */}
-        <div className="col-span-1 lg:col-span-1">
-          <div className="glass-card !p-6">
-            <h3 className="text-xs uppercase tracking-widest font-semibold text-[#71717a] mb-5 flex items-center gap-2">
-              <SlidersHorizontal size={14} /> Summarizer Controls
-            </h3>
+        {/* Right Parameter Studio Controls (Col 4) */}
+        <div className="lg:col-span-4">
+          <div className="studio-card p-6 studio-card-glow space-y-6">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-4">
+              <Sliders size={16} className="text-cyan-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Summarizer Controls</h3>
+            </div>
 
-            <div className="mb-5">
-              <label className="text-xs text-[#a1a1aa] block mb-2 font-medium">Target Length</label>
+            {/* Target Length Slider / Select */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Target Summary Length
+              </label>
               <select
                 value={targetLength}
                 onChange={e => setTargetLength(e.target.value)}
+                className="studio-select"
               >
-                <option value="50 words">50 words (Quick)</option>
-                <option value="100 words">100 words (Balanced)</option>
-                <option value="250 words">250 words (Detailed)</option>
-                <option value="Detailed">Detailed (Full)</option>
+                <option value="50 words">50 words (Concise Snapshot)</option>
+                <option value="100 words">100 words (Balanced Synopsis)</option>
+                <option value="250 words">250 words (Extended Executive)</option>
+                <option value="Detailed">Detailed (Full Sectional Breakdown)</option>
               </select>
             </div>
 
-            <div className="mb-8">
-              <label className="text-xs text-[#a1a1aa] block mb-2 font-medium">Output Format</label>
+            {/* Structural Format */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Output Format Structure
+              </label>
               <select
                 value={outputFormat}
                 onChange={e => setOutputFormat(e.target.value)}
+                className="studio-select"
               >
-                <option value="bullets">Bullet Points</option>
-                <option value="paragraph">Executive Paragraph</option>
+                <option value="bullets">Bullet Points & Key Takeaways</option>
+                <option value="paragraph">Executive Synthesis Paragraph</option>
               </select>
             </div>
 
+            {/* Primary Action Button */}
             <button
-              className="btn-primary w-full"
-              onClick={handleGenerate}
+              onClick={handleSummarize}
               disabled={loading || !text.trim()}
+              className="btn-studio-primary w-full py-3 text.sm"
             >
               {loading ? (
                 <>
-                  <div className="spinner" />
-                  Generating...
+                  <div className="studio-spinner" /> Synthesizing Summary...
                 </>
               ) : (
                 <>
-                  <Zap size={16} /> Generate Summary
+                  <Sparkles size={16} /> Generate Summary <ArrowRight size={14} />
                 </>
               )}
             </button>
@@ -244,70 +233,60 @@ export default function Summarizer({ settings, selectedModel }) {
         </div>
       </div>
 
-      {/* Output Section */}
+      {/* Output Results Workbench */}
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12 mb-20"
+            className="studio-card p-8 space-y-6 border-cyan-500/30"
           >
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-4">
-              <FileJson size={20} className="text-[#a1a1aa]" /> Structured Output
-            </h3>
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+              <div>
+                <span className="text-[0.65rem] font-bold text-cyan-400 uppercase tracking-widest block mb-1">
+                  Synthesized Result
+                </span>
+                <h3 className="text-xl font-bold text-white">{result.title}</h3>
+              </div>
+              <button onClick={downloadSummary} className="btn-studio-secondary text-xs">
+                <Download size={14} /> Export TXT
+              </button>
+            </div>
 
-            {/* Title Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="p-6 rounded-xl mb-6 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)]"
-            >
-              <span className="text-[0.65rem] uppercase tracking-widest text-[#71717a] font-semibold block mb-2">
-                Document Title
-              </span>
-              <div className="text-2xl font-semibold text-white">{result.title}</div>
-            </motion.div>
+            {/* Executive Summary Box */}
+            <div className="p-5 bg-slate-900/80 border-l-4 border-cyan-500 rounded-r-xl text-sm leading-relaxed text-slate-200">
+              {result.summary}
+            </div>
 
-            {/* Summary Box */}
-            <h4 className="text-[0.7rem] font-semibold text-[#71717a] uppercase tracking-widest mb-3 pl-1">
-              Executive Summary
-            </h4>
-            <div className="summary-box mb-8">{result.summary}</div>
-
-            {/* Bullets */}
+            {/* Key Takeaways Bullets */}
             {result.bullets?.length > 0 && (
-              <>
-                <h4 className="text-[0.7rem] font-semibold text-[#71717a] uppercase tracking-widest mb-3 pl-1">
-                  Key Takeaways
-                </h4>
-                <div className="space-y-3 mb-8">
-                  {result.bullets.map((b, i) => (
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Takeaways</h4>
+                <div className="space-y-2">
+                  {result.bullets.map((bullet, idx) => (
                     <motion.div
-                      key={i}
+                      key={idx}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + i * 0.05 }}
-                      className="bullet-card"
+                      transition={{ delay: idx * 0.05 }}
+                      className="p-3 bg-black/40 border border-white/5 rounded-xl flex items-start gap-3 text-sm text-slate-300"
                     >
-                      <div className="bullet-icon bg-[rgba(255,255,255,0.05)] rounded-full text-xs font-semibold">{i + 1}</div>
-                      <span className="text-sm text-[#d4d4d8] leading-relaxed">{b}</span>
+                      <CheckCircle size={16} className="text-cyan-400 shrink-0 mt-0.5" />
+                      <span>{bullet}</span>
                     </motion.div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
-            {/* Action Bar */}
-            <div className="flex items-center justify-between bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] p-4 rounded-xl">
-              <button className="btn-secondary text-sm" onClick={downloadResult}>
-                <Download size={16} /> Export
-              </button>
-              <span className="text-xs text-[#71717a] flex items-center gap-4">
-                <span>Latency: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.latency_seconds}s</code></span>
-                <span>Model: <code className="text-white bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded ml-1">{result.model_name}</code></span>
+            {/* Latency & Telemetry Metadata */}
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-xs text-slate-400 font-mono">
+              <span className="flex items-center gap-2">
+                <Clock size={14} className="text-cyan-400" /> Latency: {result.latency_seconds}s
+              </span>
+              <span className="flex items-center gap-2">
+                <Cpu size={14} className="text-emerald-400" /> Engine: {result.model_name}
               </span>
             </div>
           </motion.div>
