@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, FileText, UploadCloud, Download, CheckCircle, Clock, Cpu, ArrowRight, Copy, Trash, FileCode, Eye, Code, Terminal, Zap, Layers } from 'lucide-react'
+import { Sparkles, FileText, UploadCloud, Download, CheckCircle, Clock, Cpu, ArrowRight, Copy, Trash, FileCode, Eye, Code, Terminal, Zap, Layers, AlignLeft, ListOrdered } from 'lucide-react'
+import VercelSelect from '../components/VercelSelect'
 
 const SAMPLE_TEXT = `Learning is a lifelong journey that shapes the mind and expands our understanding of the world. Every single day gives us new chances to gain knowledge, build skills, and experience growth through curiosity. While challenges may appear, persistence helps us overcome obstacles and find fresh perspectives. As individuals develop, they also learn vital lessons about empathy, responsibility, and cooperation. Ultimately, this ongoing process enriches our daily lives, unlocks hidden potential, and opens doors to a future filled with bright new possibilities, achievements, and meaningful connections with everyone around us.`
 
@@ -241,20 +242,28 @@ export default function Summarizer({ settings, selectedModel }) {
 
             <div>
               <label className="text-[0.7rem] font-mono text-[#888888] uppercase block mb-1">Target Length</label>
-              <select value={targetLength} onChange={e => setTargetLength(e.target.value)} className="vercel-select">
-                <option value="50 words">50 words (Concise)</option>
-                <option value="100 words">100 words (Balanced)</option>
-                <option value="250 words">250 words (Extended)</option>
-                <option value="Detailed">Detailed Breakdown</option>
-              </select>
+              <VercelSelect
+                options={[
+                  { value: '50 words', label: '50 words (Concise Snapshot)', description: '2-3 sentence brief executive summary' },
+                  { value: '100 words', label: '100 words (Balanced Overview)', description: '4-5 sentence balanced summary' },
+                  { value: '250 words', label: '250 words (Extended Report)', description: 'Comprehensive multi-paragraph report' },
+                  { value: 'Detailed', label: 'Detailed Breakdown', description: 'In-depth exhaustive analysis' },
+                ]}
+                value={targetLength}
+                onChange={setTargetLength}
+              />
             </div>
 
             <div>
               <label className="text-[0.7rem] font-mono text-[#888888] uppercase block mb-1">Format Structure</label>
-              <select value={outputFormat} onChange={e => setOutputFormat(e.target.value)} className="vercel-select">
-                <option value="bullets">Bullet Points & Key Takeaways</option>
-                <option value="paragraph">Executive Paragraph</option>
-              </select>
+              <VercelSelect
+                options={[
+                  { value: 'bullets', label: 'Bullet Points & Takeaways', icon: ListOrdered, description: 'Structured takeaways with bullet lists' },
+                  { value: 'paragraph', label: 'Executive Paragraph', icon: AlignLeft, description: 'Unified narrative paragraph' },
+                ]}
+                value={outputFormat}
+                onChange={setOutputFormat}
+              />
             </div>
 
             <button

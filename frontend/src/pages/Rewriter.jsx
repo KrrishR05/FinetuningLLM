@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PenLine, Sliders, Download, ShieldCheck, AlertTriangle, FileDiff, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap } from 'lucide-react'
+import VercelSelect from '../components/VercelSelect'
 
 const SAMPLE_DRAFT_TEXT = `Hi team, we has tested the new API endpoint yesterday on server 4 and found 3 errors in response payload. Average response time was 850ms which is too high according to our 200ms SLA target. We need to fix this asap before release.`
 
@@ -163,11 +164,14 @@ export default function Rewriter({ settings, selectedModel, presets }) {
 
             <div>
               <label className="text-[0.7rem] font-mono text-[#888888] uppercase block mb-1">Preset Style</label>
-              <select value={preset} onChange={e => setPreset(e.target.value)} className="vercel-select">
-                {Object.entries(presets).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
+              <VercelSelect
+                options={Object.entries(presets).map(([key, label]) => ({
+                  value: key,
+                  label: label,
+                }))}
+                value={preset}
+                onChange={setPreset}
+              />
             </div>
 
             <button

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Server, Trash2, Sliders, ShieldCheck, Cpu } from 'lucide-react'
+import { Server, Trash2, Sliders, ShieldCheck } from 'lucide-react'
+import VercelSelect from './VercelSelect'
 
 export default function VercelHeader({
   tabs,
@@ -44,19 +45,13 @@ export default function VercelHeader({
 
         {/* Center Model Selector & Controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-[#0a0a0a] border border-[var(--border-subtle)] rounded-md px-2.5 py-1">
-            <Server size={13} className="text-[#888888] mr-2 shrink-0" />
-            <select
+          <div className="w-56">
+            <VercelSelect
+              options={models.map(m => ({ value: m.id, label: m.label || m.id }))}
               value={selectedModel}
-              onChange={e => onModelChange(e.target.value)}
-              className="bg-transparent text-xs font-mono font-medium text-white outline-none cursor-pointer pr-4"
-            >
-              {models.map(m => (
-                <option key={m.id} value={m.id} className="bg-[#0a0a0a] text-white">
-                  {m.label || m.id}
-                </option>
-              ))}
-            </select>
+              onChange={onModelChange}
+              icon={Server}
+            />
           </div>
 
           {/* Live Status Badge */}
