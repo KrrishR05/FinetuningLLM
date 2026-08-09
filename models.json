@@ -2,15 +2,59 @@
   "models": [
     {
       "id": "main",
-      "label": "Gemma 4 E2B (Google DeepMind) - Main Source",
-      "runtime": "local_llm",
-      "model_name": "gemma4-e2b:latest",
+      "label": "💎 Gemma 4 E2B IT (Google DeepMind) — Primary",
+      "runtime": "ollama",
+      "model_name": "hf.co/ggml-org/gemma-4-E2B-it-GGUF:Q4_0",
       "gguf_filename": "gemma-4-E2B-it-Q4_0.gguf",
       "endpoint": "http://127.0.0.1:11434",
       "llama_server_endpoint": "http://127.0.0.1:8080",
       "status": "ready",
       "default": true,
-      "notes": "Primary model: Google DeepMind Gemma 4 instruction-tuned local GGUF."
+      "notes": "Primary model: Google DeepMind Gemma 4 instruction-tuned local GGUF via Ollama."
+    },
+    {
+      "id": "qwen7b",
+      "label": "⚖️ Qwen 2.5 7B (Alibaba Cloud)",
+      "runtime": "ollama",
+      "model_name": "qwen2.5:7b",
+      "endpoint": "http://127.0.0.1:11434",
+      "llama_server_endpoint": "http://127.0.0.1:8080",
+      "status": "ready",
+      "default": false,
+      "notes": "High quality balanced 7B model."
+    },
+    {
+      "id": "llama3",
+      "label": "🦙 Llama 3.2 3B (Meta)",
+      "runtime": "ollama",
+      "model_name": "llama3.2:3b",
+      "endpoint": "http://127.0.0.1:11434",
+      "llama_server_endpoint": "http://127.0.0.1:8080",
+      "status": "ready",
+      "default": false,
+      "notes": "Fast Meta model family."
+    },
+    {
+      "id": "gemma3",
+      "label": "💎 Gemma 3 4B (Google)",
+      "runtime": "ollama",
+      "model_name": "gemma3:4b",
+      "endpoint": "http://127.0.0.1:11434",
+      "llama_server_endpoint": "http://127.0.0.1:8080",
+      "status": "ready",
+      "default": false,
+      "notes": "Google Gemma 3 4B model family."
+    },
+    {
+      "id": "qwen3b",
+      "label": "⚡ Qwen 2.5 3B (Alibaba Cloud)",
+      "runtime": "ollama",
+      "model_name": "qwen2.5:3b",
+      "endpoint": "http://127.0.0.1:11434",
+      "llama_server_endpoint": "http://127.0.0.1:8080",
+      "status": "ready",
+      "default": false,
+      "notes": "Fast 3B model."
     }
   ]
 }

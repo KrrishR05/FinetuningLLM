@@ -1,35 +1,51 @@
 def quick_summary_prompt(text: str, length: str = "100 words", fmt: str = "bullets") -> str:
-    if fmt == "bullets":
-        format_instruction = "Use bullet points."
-    else:
-        format_instruction = "Write as a single continuous paragraph. Do NOT include bullet points or lists."
+    word_guidelines = {
+        "50 words": "Provide a concise 2-3 sentence executive overview (approx 50 words).",
+        "100 words": "Provide a well-balanced executive overview (approx 100 words).",
+        "250 words": "Provide a detailed, comprehensive executive overview (approx 250 words).",
+        "Detailed": "Provide an in-depth, thorough executive breakdown."
+    }
+    length_desc = word_guidelines.get(length, f"Target length: {length}.")
 
     if fmt == "bullets":
-        output_block = """Title: <one line>
-Summary: <the summary>
-Key Points: <3-5 bullets>"""
-    else:
-        output_block = """Title: <one line>
-Summary: <the summary>"""
+        output_format_instructions = f"""
+OUTPUT FORMAT (Strictly follow this structure):
+Title: <Create a concise, professional 3-7 word title>
 
-    return f"""You are a precise summarization assistant.
-Summarize the following text in {length}. Do NOT exceed {length}.
-{format_instruction}
+Summary:
+<Executive summary paragraph synthesizing the core thesis. {length_desc}>
+
+Key Points:
+- <Full, informative key takeaway sentence>
+- <Full, informative key takeaway sentence>
+- <Full, informative key takeaway sentence>
+"""
+    else:
+        output_format_instructions = f"""
+OUTPUT FORMAT (Strictly follow this structure):
+Title: <Create a concise, professional 3-7 word title>
+
+Summary:
+<Executive summary paragraph synthesizing the core thesis and main takeaways. {length_desc}>
+"""
+
+    return f"""You are an expert executive summarization assistant.
+Your task is to analyze the text below and generate a high-impact, professional summary.
 
 RULES:
-- Use ONLY facts present in the text below. Do not add outside knowledge.
-- Preserve all numbers, dates, and names exactly as written.
-- If the text is unclear or too short to summarize meaningfully, say so instead of inventing content.
-- Keep your total response under 400 words.
+1. Synthesize the core ideas into a polished summary—do NOT simply copy or repeat sentences line by line.
+2. {length_desc}
+3. Preserve all factual details, names, numbers, and dates accurately without outside speculation.
+4. Every bullet point in Key Points MUST be a full, meaningful sentence (at least 5 words).
 
-TEXT:
+TEXT TO SUMMARIZE:
 \"\"\"
 {text}
 \"\"\"
 
-OUTPUT FORMAT:
-{output_block}
+{output_format_instructions}
 """
+
 
 def st_brief_prompt(text: str) -> str:
     return f"""You are a research brief assistant.

@@ -144,6 +144,21 @@ class ModelAdapter:
             "error": "No local server detected on port 8080 (llama-server) or 11434 (Ollama).",
         }
 
+    def unload_model(self, model_id: Optional[str] = None) -> bool:
+        """Sends keep_alive=0 to Ollama to instantly unload model from GPU VRAM."""
+        config = self.get_model_config(model_id)
+        ollama_endpoint = config.get("endpoint", "http://127.0.0.1:11434").rstrip("/")
+        model_name = config.get("model_name", "")
+        try:
+            res = requests.post(
+                f"{ollama_endpoint}/api/generate",
+                json={"model": model_name, "keep_alive": 0},
+                timeout=5
+            )
+            return res.status_code == 200
+        except Exception:
+            return False
+
     def generate(
         self,
         prompt: str,
@@ -151,6 +166,7 @@ class ModelAdapter:
         model_id: Optional[str] = None,
         temperature: float = 0.2,
         max_tokens: Optional[int] = None,
+        keep_alive: Optional[Any] = None,
         timeout: int = 120,
     ) -> Dict[str, Any]:
         """
@@ -193,7 +209,7 @@ class ModelAdapter:
                         "latency_seconds": latency,
                         "raw": data,
                     }
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        except Exception:
             pass
 
         # Try llama.cpp server raw completion endpoint
@@ -224,20 +240,39 @@ class ModelAdapter:
                         "latency_seconds": latency,
                         "raw": data,
                     }
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        except Exception:
             pass
 
         # Try Ollama endpoint (/api/generate)
         try:
+            # 1. Resolve model name against installed Ollama models
+            resolved_model = model_name
+            try:
+                tags_res = requests.get(f"{ollama_endpoint}/api/tags", timeout=2)
+                if tags_res.status_code == 200:
+                    installed = [m.get("name") for m in tags_res.json().get("models", [])]
+                    if installed and resolved_model not in installed:
+                        matched = [m for m in installed if resolved_model.lower() in m.lower() or m.lower() in resolved_model.lower()]
+                        if not matched and "gemma" in resolved_model.lower():
+                            matched = [m for m in installed if "gemma" in m.lower()]
+                        if matched:
+                            resolved_model = matched[0]
+                        elif installed:
+                            resolved_model = installed[0]
+            except Exception:
+                pass
+
             ollama_url = f"{ollama_endpoint}/api/generate"
             payload = {
-                "model": model_name,
+                "model": resolved_model,
                 "prompt": prompt,
                 "stream": False,
                 "options": {
                     "temperature": temperature,
                 },
             }
+            if keep_alive is not None:
+                payload["keep_alive"] = keep_alive
             if system_prompt:
                 payload["system"] = system_prompt
             if max_tokens:
@@ -252,11 +287,23 @@ class ModelAdapter:
                     "runtime": "ollama",
                     "text": data.get("response", "").strip(),
                     "model_id": config.get("id"),
-                    "model_name": model_name,
+                    "model_name": resolved_model,
                     "latency_seconds": latency,
                     "raw": data,
                 }
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            else:
+                try:
+                    err_msg = res.json().get("error", res.text)
+                except Exception:
+                    err_msg = res.text
+                return {
+                    "status": "error",
+                    "error": f"Ollama API Error ({res.status_code}): {err_msg}",
+                    "model_id": config.get("id"),
+                    "model_name": resolved_model,
+                    "latency_seconds": latency,
+                }
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             pass
 
         latency = round(time.time() - start_time, 2)
@@ -264,7 +311,7 @@ class ModelAdapter:
             "status": "error",
             "error": "Local Gemma-4 model runtime is offline. Please start llama-server or Ollama.",
             "model_id": config.get("id"),
-            "model_name": "Gemma-4 E2B",
+            "model_name": config.get("model_name", "Gemma-4 E2B"),
             "latency_seconds": latency,
             "text": "",
         }
