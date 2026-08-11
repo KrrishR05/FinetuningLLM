@@ -12,8 +12,8 @@ from modules.validators import check_fact_preservation
 # Page Config & Custom Design System (CSS)
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="NETRAVAANI — Offline LLM Suite",
-    page_icon="💎",
+    page_title="VERIDIAN — Offline LLM Suite",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -175,7 +175,7 @@ model_profiles = adapter.get_available_models()
 # Sidebar Controls & Model Selector
 # ---------------------------------------------------------
 with st.sidebar:
-    st.markdown("### 💎 Engine & Model Registry")
+    st.markdown("###  Engine & Model Registry")
     
     # Model Selector Dropdown
     model_options = {m["id"]: f"{m.get('label', m['id'])}" for m in model_profiles}
@@ -193,7 +193,7 @@ with st.sidebar:
         st.markdown(
             f"""
             <div style="margin-top: 10px;">
-                <span class="badge-online">🟢 Model Server Online</span>
+                <span class="badge-online"> Model Server Online</span>
                 <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px;">
                     <b>Runtime:</b> <code>{health.get('runtime')}</code><br>
                     <b>Endpoint:</b> <code>{health.get('endpoint')}</code>
@@ -206,7 +206,7 @@ with st.sidebar:
         st.markdown(
             """
             <div style="margin-top: 10px;">
-                <span class="badge-offline">🔴 Server Offline</span>
+                <span class="badge-offline"> Server Offline</span>
                 <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px;">
                     Run <code>run_offline.bat</code> to launch local server.
                 </div>
@@ -214,16 +214,16 @@ with st.sidebar:
             """,
             unsafe_allow_html=True,
         )
-        if st.button("🧹 Release GPU VRAM Now", use_container_width=True):
+        if st.button(" Release GPU VRAM Now", use_container_width=True):
             if adapter.unload_model(selected_model_id):
-                st.toast("✅ GPU VRAM Released!", icon="🚀")
+                st.toast(" GPU VRAM Released!", icon="")
             else:
-                st.toast("ℹ️ Model already unloaded or offline.", icon="💡")
+                st.toast(" Model already unloaded or offline.", icon="")
 
     st.markdown("---")
-    st.markdown("### ⚙️ Generation Settings")
+    st.markdown("### Generation Settings")
     auto_unload_vram = st.checkbox(
-        "⚡ Auto-release GPU VRAM after generation",
+        " Auto-release GPU VRAM after generation",
         value=False,
         help="Instantly unloads model weights from VRAM after generation ends to free GPU memory.",
     )
@@ -237,7 +237,7 @@ with st.sidebar:
 
 
     st.markdown("---")
-    st.caption("🔒 100% Air-Gapped Local Inference Engine")
+    st.caption(" 100% Air-Gapped Local Inference Engine")
 
 # ---------------------------------------------------------
 # App Header
@@ -245,12 +245,12 @@ with st.sidebar:
 st.markdown(
     """
     <div class="netra-header">
-        <div class="netra-title">💎 NETRAVAANI — Offline LLM Suite</div>
+        <div class="netra-title"> VERIDIAN — Offline LLM Suite</div>
         <div class="netra-subtitle">
-            <span>🔒 Air-Gapped Document Intelligence</span>
-            <span>•</span>
-            <span>⚡ Zero Cloud Dependency</span>
-            <span>•</span>
+            <span> Air-Gapped Document Intelligence</span>
+            <span></span>
+            <span> Zero Cloud Dependency</span>
+            <span></span>
             <span class="badge-info">RTX 4060 Accelerated</span>
         </div>
     </div>
@@ -262,17 +262,17 @@ st.markdown(
 # 4 Main Workflow Tabs
 # ---------------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
-    "⚡ 1. AI/ML Text Summarization",
-    "🔬 2. S&T Document Brief",
-    "📰 3. News Digest & Fact/Opinion",
-    "✍️ 4. Rewrite & Grammar",
+    " 1. AI/ML Text Summarization",
+    " 2. S&T Document Brief",
+    " 3. News Digest & Fact/Opinion",
+    " 4. Rewrite & Grammar",
 ])
 
 # =========================================================
 # TAB 1: AI/ML Text Summarization (P0)
 # =========================================================
 with tab1:
-    st.markdown("### ⚡ AI/ML Text Summarization")
+    st.markdown("###  AI/ML Text Summarization")
     st.markdown("Summarize unstructured text or documents locally with custom length and structural formatting controls.")
 
     col_input, col_config = st.columns([2, 1])
@@ -280,7 +280,7 @@ with tab1:
     with col_input:
         input_mode = st.radio(
             "Select Input Source",
-            ["📝 Paste Raw Text", "📁 Upload Document (.pdf, .docx, .txt)"],
+            [" Paste Raw Text", " Upload Document (.pdf, .docx, .txt)"],
             horizontal=True,
         )
 
@@ -288,7 +288,7 @@ with tab1:
         doc_filename = ""
         doc_page_count = 0
 
-        if input_mode == "📝 Paste Raw Text":
+        if input_mode == " Paste Raw Text":
             extracted_text = st.text_area(
                 "Paste Text Here",
                 height=240,
@@ -297,7 +297,7 @@ with tab1:
             if extracted_text:
                 char_count = len(extracted_text)
                 word_count = len(extracted_text.split())
-                st.caption(f"📊 **Input Stats:** {word_count:,} words | {char_count:,} characters")
+                st.caption(f" **Input Stats:** {word_count:,} words | {char_count:,} characters")
 
         else:
             uploaded_file = st.file_uploader(
@@ -327,7 +327,7 @@ with tab1:
 
     with col_config:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='glass-card-header'>🎛️ Summarizer Controls</div>", unsafe_allow_html=True)
+        st.markdown("<div class='glass-card-header'> Summarizer Controls</div>", unsafe_allow_html=True)
         
         target_length = st.select_slider(
             "Target Summary Length",
@@ -343,16 +343,16 @@ with tab1:
 
         fmt_key = "bullets" if output_format == "Bullet Points" else "paragraph"
 
-        generate_btn = st.button("⚡ Generate Summary", use_container_width=True, type="primary")
+        generate_btn = st.button(" Generate Summary", use_container_width=True, type="primary")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Execution & Output Section
     if generate_btn:
         if not extracted_text or not extracted_text.strip():
-            st.warning("⚠️ Please paste text or upload a valid document first!")
+            st.warning("Please paste text or upload a valid document first!")
         else:
             st.markdown("---")
-            with st.spinner("🧠 Local model is generating structured summary..."):
+            with st.spinner(" Local model is generating structured summary..."):
                 res = summarize_text(
                     text=extracted_text,
                     adapter=adapter,
@@ -367,7 +367,7 @@ with tab1:
 
 
             if res.get("status") == "success":
-                st.markdown("### 📌 Structured Summary Output")
+                st.markdown("###  Structured Summary Output")
                 
                 # Title Card
                 st.markdown(
@@ -381,17 +381,17 @@ with tab1:
                 )
 
                 # Executive Summary Text
-                st.markdown("#### 📝 Executive Summary")
+                st.markdown("####  Executive Summary")
                 st.markdown(f"<div class='summary-box'>{res['summary']}</div>", unsafe_allow_html=True)
 
                 # Bullet Points section
                 if res.get("bullets"):
-                    st.markdown("#### 🔑 Key Takeaways")
+                    st.markdown("####  Key Takeaways")
                     for b in res["bullets"]:
                         st.markdown(
                             f"""
                             <div class="bullet-item">
-                                <span>🔹</span>
+                                <span></span>
                                 <div>{b}</div>
                             </div>
                             """,
@@ -408,7 +408,7 @@ with tab1:
                         full_export_text += "KEY POINTS:\n" + "\n".join([f"- {b}" for b in res["bullets"]])
                     
                     st.download_button(
-                        label="📥 Download Summary (.txt)",
+                        label=" Download Summary (.txt)",
                         data=full_export_text,
                         file_name=f"summary_{res['title'][:20].replace(' ', '_')}.txt",
                         mime="text/plain",
@@ -418,15 +418,15 @@ with tab1:
                     st.markdown(
                         f"""
                         <div style="text-align: right; font-size: 0.85rem; color: #9ca3af;">
-                            ⚡ <b>Latency:</b> <code>{res.get('latency_seconds')}s</code> | 
-                            🤖 <b>Model:</b> <code>{res.get('model_name')}</code> ({res.get('runtime')})
+                             <b>Latency:</b> <code>{res.get('latency_seconds')}s</code> | 
+                             <b>Model:</b> <code>{res.get('model_name')}</code> ({res.get('runtime')})
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
 
             else:
-                st.error(f"❌ Summarization failed: {res.get('error')}")
+                st.error(f" Summarization failed: {res.get('error')}")
 
 # =========================================================
 # TAB 2: S&T Document Brief (P0)

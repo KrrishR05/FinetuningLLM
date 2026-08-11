@@ -31,7 +31,7 @@ export default function CommandBar({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-bold tracking-tight text-white font-sans">
-                NETRAVAANI <span className="text-[0.65rem] font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">PRO WORKSTATION</span>
+                VERIDIAN <span className="text-[0.65rem] font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">PRO WORKSTATION</span>
               </h1>
             </div>
             <p className="text-[0.68rem] text-[var(--text-muted)] flex items-center gap-2 font-mono">

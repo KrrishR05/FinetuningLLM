@@ -6,6 +6,7 @@ from typing import Dict, List, Any, Optional
 
 DEFAULT_MODELS_JSON_PATH = os.path.join(os.path.dirname(__file__), "..", "models.json")
 DEFAULT_GGUF_PATH = os.path.join(os.path.dirname(__file__), "..", "gemma-4-E2B-it-Q4_0.gguf")
+DOWNLOADS_GGUF_PATH = os.path.expanduser("~/Downloads/gemma-4-E2B-it-Q4_0.gguf")
 
 
 class ModelAdapter:
@@ -136,11 +137,12 @@ class ModelAdapter:
             pass
 
         # Check if local GGUF file exists on disk
-        gguf_exists = os.path.exists(DEFAULT_GGUF_PATH)
+        found_gguf = DEFAULT_GGUF_PATH if os.path.exists(DEFAULT_GGUF_PATH) else (DOWNLOADS_GGUF_PATH if os.path.exists(DOWNLOADS_GGUF_PATH) else None)
+        gguf_exists = found_gguf is not None
         return {
             "status": "offline",
             "gguf_file_present": gguf_exists,
-            "gguf_path": DEFAULT_GGUF_PATH if gguf_exists else None,
+            "gguf_path": found_gguf,
             "error": "No local server detected on port 8080 (llama-server) or 11434 (Ollama).",
         }
 
@@ -278,19 +280,9 @@ class ModelAdapter:
                     "latency_seconds": latency,
                     "raw": data,
                 }
-            else:
-                try:
-                    err_msg = res.json().get("error", res.text)
-                except Exception:
-                    err_msg = res.text
-                return {
-                    "status": "error",
-                    "error": f"Ollama API Error ({res.status_code}): {err_msg}",
-                    "model_id": config.get("id"),
-                    "model_name": resolved_model,
-                    "latency_seconds": latency,
-                }
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            pass
+        except Exception:
             pass
 
         latency = round(time.time() - start_time, 2)

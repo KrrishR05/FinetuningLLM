@@ -20,7 +20,7 @@ export default function Header({ health }) {
       />
 
       <h1 className="text-3xl font-semibold tracking-tight mb-3 text-white flex items-center gap-3">
-        NETRAVAANI
+        VERIDIAN
       </h1>
 
       <div className="flex items-center gap-3 flex-wrap mb-2">

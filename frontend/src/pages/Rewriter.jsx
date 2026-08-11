@@ -5,7 +5,19 @@ import VercelSelect from '../components/VercelSelect'
 
 const SAMPLE_DRAFT_TEXT = `Hi team, we has tested the new API endpoint yesterday on server 4 and found 3 errors in response payload. Average response time was 850ms which is too high according to our 200ms SLA target. We need to fix this asap before release.`
 
+const FALLBACK_PRESETS = {
+  grammar: 'Grammar Only',
+  formal: 'Formal Report',
+  concise: 'Ultra-Concise Edit',
+  technical: 'Technical Report',
+  email: 'Professional Email',
+  executive: 'Executive Brief',
+  bullets: 'Bullet Notes',
+  plain: 'Plain Language',
+}
+
 export default function Rewriter({ settings, selectedModel, presets }) {
+  const activePresets = (presets && Object.keys(presets).length > 0) ? presets : FALLBACK_PRESETS
   const [text, setText] = useState('')
   const [preset, setPreset] = useState('formal')
   const [viewTab, setViewTab] = useState('rendered')
@@ -49,7 +61,10 @@ export default function Rewriter({ settings, selectedModel, presets }) {
 
   const runPreset = (selectedPreset) => {
     setPreset(selectedPreset)
-    if (text.trim()) {
+    if (!text.trim()) {
+      setText(SAMPLE_DRAFT_TEXT)
+      handleGenerate(selectedPreset, SAMPLE_DRAFT_TEXT)
+    } else {
       handleGenerate(selectedPreset, text)
     }
   }
@@ -166,7 +181,7 @@ export default function Rewriter({ settings, selectedModel, presets }) {
             <div>
               <label className="text-[0.7rem] font-mono text-[#888888] uppercase block mb-1">Preset Style</label>
               <VercelSelect
-                options={Object.entries(presets).map(([key, label]) => ({
+                options={Object.entries(activePresets).map(([key, label]) => ({
                   value: key,
                   label: label,
                 }))}

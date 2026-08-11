@@ -173,6 +173,7 @@ def generate_news_digest(
     all_opinions = []
     all_topics = []
     summaries = []
+    last_model_name = ""
 
     for chunk in chunks:
         prompt = news_digest_prompt(text=chunk.text, topic=topic)
@@ -193,6 +194,7 @@ def generate_news_digest(
             all_opinions.extend(parsed["opinions"])
             if parsed["summary"]:
                 summaries.append(parsed["summary"])
+            last_model_name = response.get("model_name", last_model_name)
 
     elapsed = round(time.time() - t0, 2)
 
@@ -227,4 +229,5 @@ def generate_news_digest(
         },
         "num_chunks": len(chunks),
         "latency_seconds": elapsed,
+        "model_name": last_model_name,
     }

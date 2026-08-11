@@ -53,7 +53,10 @@ export default function NewsDigest({ settings, selectedModel }) {
 
   const runPreset = (sampleText, topicFilter) => {
     setTopic(topicFilter)
-    if (text.trim()) {
+    if (!text.trim()) {
+      setText(sampleText)
+      handleGenerate(topicFilter, sampleText)
+    } else {
       handleGenerate(topicFilter, text)
     }
   }

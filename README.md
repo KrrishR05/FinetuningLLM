@@ -1,6 +1,6 @@
-# Offline Intelligence Suite (Netravaani)
+# Offline Intelligence Suite (Veridian)
 
-> **A 100% local, air-gapped document intelligence workspace powered by open-source LLMs.**  
+> **A 100% local, air-gapped document intelligence workspace powered by open-source LLMs.**
 > Summarize sensitive documents, generate structured S&T research briefs, digest local news with fact/opinion separation, and rewrite text with strict factual integrity — entirely offline without cloud APIs.
 
 ---
@@ -8,26 +8,31 @@
 ## 📌 Features & Workflows
 
 ### 1. ⚡ Quick Summary Mode
+
 - Input pasted text or upload `TXT`, `PDF`, or `DOCX` files.
 - Adjustable output lengths: Short (50 words), Medium (100 words), or Detailed Executive Brief.
 - Formats: Paragraph, Bullet points, or Key takeaways.
 
 ### 2. 🔬 Science & Technology (S&T) Research Brief
+
 - Page-aware extraction for technical documents.
 - Automatic map-reduce summarization preserving original page citations.
 - Extracts **Objective**, **Methodology**, **Key Findings**, **Values/Units/Dates**, and **Limitations**.
 
 ### 3. 📰 News & Editorial Digest
+
 - Process pre-stored local news headlines and editorials (CSV or TXT format).
 - Topic-wise timeline overview.
 - **Strict Fact vs. Opinion Separation**: News facts are strictly isolated from subjective editorial viewpoints.
 
 ### 4. ✍️ Rewrite & Grammar (Context-Safe)
+
 - Rewrite technical drafts into formal reports, emails, or executive memos.
 - **Fact-Lock Engine**: Locks dates, numerical values, proper nouns, and technical units to prevent hallucination during rewrite.
 - Side-by-side original vs. revised diff view with change explanations.
 
 ### 5. 🎛️ Flagship Local LLM: Gemma 4 E2B
+
 - Powered by **Google DeepMind's Gemma 4 E2B Instruction-Tuned** model (`gemma-4-E2B-it-Q4_0.gguf`).
 - **High-Performance Local Inference**: Accelerated via CUDA with `llama-server` (port 8080) and Ollama fallback.
 - **Strictly Air-Gapped**: Runs 100% locally with 0 bytes sent to external cloud services.
@@ -52,16 +57,17 @@
 ### Phase 1: Setup & Model Download (Requires Internet)
 
 1. **Clone or Navigate to Project Directory:**
+
    ```bash
    cd Hackathon_Project
    ```
-
 2. **Install Python Dependencies:**
+
    ```bash
    pip install -r requirements.txt
    ```
-
 3. **Pull Tested Local Models via Ollama:**
+
    ```bash
    # Pull main source demo model (Gemma 4 E2B)
    ollama pull google/gemma-4-E2B-it
@@ -79,7 +85,7 @@
 
 1. **Disconnect Internet:** Disable Wi-Fi and unplug Ethernet cables.
 2. **Start the Application:**
-   - Double-click `run_offline.bat` (Windows)  
+   - Double-click `run_offline.bat` (Windows)
    - OR run via CLI:
      ```bash
      streamlit run app.py

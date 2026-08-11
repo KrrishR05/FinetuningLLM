@@ -17,6 +17,8 @@ from modules.validators import extract_facts, check_fact_preservation
 PRESETS = {
     "grammar": "Grammar Only",
     "formal": "Formal Report",
+    "concise": "Ultra-Concise Edit",
+    "technical": "Technical Report",
     "email": "Professional Email",
     "executive": "Executive Brief",
     "bullets": "Bullet Notes",
