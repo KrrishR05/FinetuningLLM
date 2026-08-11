@@ -1,1 +1,6 @@
-FROM "C:/Users/HeetP/Downloads/gemma-4-E2B-it-Q4_0.gguf"
+FROM hf.co/ggml-org/gemma-4-E2B-it-GGUF:Q4_0
+TEMPLATE """<start_of_turn>user
+{{ .Prompt }}<end_of_turn>
+<start_of_turn>model
+"""
+PARAMETER stop "<end_of_turn>"
