@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Microscope, FileText, UploadCloud, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap, Target, Cpu, AlertTriangle, Lightbulb, Bookmark } from 'lucide-react'
+import { Microscope, FileText, UploadCloud, Download, Clock, ArrowRight, FileCode, Eye, Code, Copy, Trash, Zap, Target, Cpu, AlertTriangle, Lightbulb, Bookmark, Sparkles } from 'lucide-react'
 
 const SAMPLE_SCIENCE_TEXT = `TITLE: Quantum Phase Transitions in Superconducting Qubits
 AUTHORS: Dr. A. Sharma, Prof. R. Patel (IISc Bangalore, 2026)

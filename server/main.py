@@ -1,5 +1,5 @@
 """
-FastAPI Backend — NETRAVAANI Offline LLM Suite
+FastAPI Backend — VERIDIAN Offline LLM Suite
 ===============================================
 REST API that wraps existing modules/ core logic.
 All Python processing (summarization, extraction, rewriting, etc.)
@@ -34,7 +34,7 @@ from modules.models import PageContent
 # App Initialization
 # ---------------------------------------------------------
 app = FastAPI(
-    title="NETRAVAANI API",
+    title="VERIDIAN API",
     description="Offline LLM Document Intelligence REST API",
     version="1.0.0",
 )
@@ -203,6 +203,10 @@ async def api_extract(file: UploadFile = File(...)):
     return {
         "full_text": result.full_text,
         "num_pages": len(result.pages) if result.pages else 0,
+        "pages": [
+            {"page_number": p.page_number, "text": p.text, "source_label": p.source_label}
+            for p in (result.pages or [])
+        ],
         "metadata": result.metadata,
         "warnings": result.warnings,
         "sections": [

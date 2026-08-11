@@ -81,7 +81,10 @@ export default function Summarizer({ settings, selectedModel }) {
   const runPreset = (length, format) => {
     setTargetLength(length)
     setOutputFormat(format)
-    if (text.trim()) {
+    if (!text.trim()) {
+      setText(SAMPLE_TEXT)
+      handleSummarize(length, format, SAMPLE_TEXT)
+    } else {
       handleSummarize(length, format, text)
     }
   }
@@ -397,7 +400,7 @@ ${(result.bullets || []).map(b => `- ${b}`).join('\n')}`}
     "text": "${text.replace(/"/g, '\\"').slice(0, 100)}...",
     "model_id": "${selectedModel}",
     "length": "${targetLength}",
-    "format": "${outputFormat}"
+    "fmt": "${outputFormat}"
   }'`}
               </pre>
             )}

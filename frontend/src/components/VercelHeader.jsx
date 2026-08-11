@@ -64,7 +64,7 @@ export default function VercelHeader({
               <span />
             </div>
             <div className="app-brand__copy">
-              <span className="app-brand__name">NETRAVAANI</span>
+              <span className="app-brand__name">VERIDIAN</span>
               <span className="app-brand__subtitle">Private AI workstation</span>
             </div>
           </div>

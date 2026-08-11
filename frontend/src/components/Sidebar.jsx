@@ -31,9 +31,9 @@ export default function Sidebar({
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-white text-black flex items-center justify-center font-bold text-sm">
-            N
+            V
           </div>
-          NETRAVAANI
+          VERIDIAN
         </h2>
         <p className="text-[0.75rem] text-[#71717a] mt-2 tracking-wide uppercase">Offline LLM Suite v1.0</p>
       </div>
